@@ -2,12 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const authRoutes = require("./routes/auth");
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI || "";
+let isMongoConnected = false;
 
 app.use(cors());
 app.use(express.json());
@@ -20,21 +22,30 @@ const connectToMongo = async () => {
 
   try {
     await mongoose.connect(MONGO_URI);
+    isMongoConnected = true;
     console.log("MongoDB connected successfully.");
   } catch (error) {
+    isMongoConnected = false;
     console.error("MongoDB connection failed:", error.message);
   }
 };
 
 app.get("/api/health", (_req, res) => {
-  const dbState = mongoose.connection.readyState;
-  const isDbConnected = dbState === 1;
-
   res.status(200).json({
     message: "CodeBattle Arena API is running.",
     serverTime: new Date().toISOString(),
-    dbConnected: isDbConnected,
+    dbConnected: isMongoConnected,
   });
+});
+
+app.use("/api/auth", authRoutes);
+
+mongoose.connection.on("connected", () => {
+  isMongoConnected = true;
+});
+
+mongoose.connection.on("disconnected", () => {
+  isMongoConnected = false;
 });
 
 app.listen(PORT, () => {
