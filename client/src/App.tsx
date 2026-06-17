@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import SetupCheck from "./pages/SetupCheck";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 function App() {
   return (
@@ -14,9 +16,9 @@ function App() {
         <Route
           path="/dashboard"
           element={
-            <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center">
-              <p className="text-xl">Dashboard coming soon — login successful!</p>
-            </div>
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
           }
         />
       </Routes>
