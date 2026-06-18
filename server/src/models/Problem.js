@@ -22,6 +22,7 @@ const problemSchema = new mongoose.Schema({
     required: true
   },
   tags: [{ type: String }],
+  functionName: { type: String, required: true },
   examples: [exampleSchema],
   testCases: [testCaseSchema],
   starterCode: { type: String, default: '' },

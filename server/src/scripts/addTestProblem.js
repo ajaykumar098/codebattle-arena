@@ -8,6 +8,7 @@ const testProblem = {
   description: 'Given an array of integers and a target value, return the indices of the two numbers that add up to the target.',
   difficulty: 'Easy',
   tags: ['Array', 'Hash Table'],
+  functionName: 'twoSum',
   examples: [
     {
       input: 'nums = [2,7,11,15], target = 9',
@@ -16,8 +17,8 @@ const testProblem = {
     }
   ],
   testCases: [
-    { input: '[2,7,11,15]\n9', expectedOutput: '[0,1]', isHidden: false },
-    { input: '[3,2,4]\n6', expectedOutput: '[1,2]', isHidden: true }
+    { input: '[[2,7,11,15],9]', expectedOutput: '[0,1]', isHidden: false },
+    { input: '[[3,2,4],6]', expectedOutput: '[1,2]', isHidden: true }
   ],
   starterCode: 'function twoSum(nums, target) {\n  // your code here\n}'
 };
@@ -27,13 +28,12 @@ async function run() {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('Connected to MongoDB');
 
-    const existing = await Problem.findOne({ slug: testProblem.slug });
-    if (existing) {
-      console.log('Test problem already exists — skipping insert.');
-    } else {
-      const created = await Problem.create(testProblem);
-      console.log('Test problem created with ID:', created._id);
-    }
+    const created = await Problem.findOneAndUpdate(
+      { slug: testProblem.slug },
+      testProblem,
+      { upsert: true, new: true }
+    );
+    console.log('Test problem upserted:', created._id);
   } catch (err) {
     console.error('Error:', err.message);
   } finally {
