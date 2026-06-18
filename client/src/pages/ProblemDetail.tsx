@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
+import CodeEditor from '../components/CodeEditor';
 
 interface Example {
   input: string;
@@ -36,6 +37,7 @@ export default function ProblemDetail() {
   const [problem, setProblem] = useState<ProblemData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [code, setCode] = useState('');
 
   useEffect(() => {
     fetch(`http://localhost:5000/api/problems/${slug}`)
@@ -43,7 +45,10 @@ export default function ProblemDetail() {
         if (!res.ok) throw new Error('Problem not found');
         return res.json();
       })
-      .then((data) => setProblem(data))
+      .then((data) => {
+        setProblem(data);
+        setCode(data.starterCode);
+      })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -88,10 +93,19 @@ export default function ProblemDetail() {
         ))}
       </div>
 
-      <h2 className="text-2xl font-bold mb-4">Starter Code</h2>
-      <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto">
-        <code>{problem.starterCode}</code>
-      </pre>
+      <h2 className="text-2xl font-bold mb-4">Your Solution</h2>
+      <CodeEditor 
+        value={code}
+        onChange={setCode}
+        language="javascript"
+        height="500px"
+      />
+      <button 
+        onClick={() => alert('Submission coming soon!')}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+      >
+        Submit Solution
+      </button>
     </div>
   );
 }
