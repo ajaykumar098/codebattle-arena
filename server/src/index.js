@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const authRoutes = require("./routes/auth");
+const problemRoutes = require("./routes/problemRoutes");
 
 dotenv.config();
 
@@ -39,6 +40,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/problems", problemRoutes);
 
 mongoose.connection.on("connected", () => {
   isMongoConnected = true;
