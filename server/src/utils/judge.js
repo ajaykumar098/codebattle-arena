@@ -34,6 +34,12 @@ async function gradeSubmission(problem, code, language = 'python') {
     console.log(`Raw length: ${tc.input.length}`);
     console.log(`Raw bytes: ${Array.from(tc.input).map(c => c.charCodeAt(0)).join(' ')}`);
     console.log(`Raw string: ${JSON.stringify(tc.input)}`);
+    console.log(`=== USER CODE SUBMITTED ===`);
+    console.log(code);
+    console.log(`=== WRAPPED CODE SENT TO PISTON ===`);
+    console.log(wrappedCode);
+    console.log(`=== PISTON URL ===`);
+    console.log(process.env.PISTON_URL || 'http://localhost:2000');
     const { stdout, stderr, compileError, status } = await runCode(wrappedCode, language, tc.input, i);
 
     let passed = false;
