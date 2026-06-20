@@ -27,7 +27,7 @@ export default function Problems() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/problems')
+    fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'}/api/problems`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch problems');
         return res.json();
