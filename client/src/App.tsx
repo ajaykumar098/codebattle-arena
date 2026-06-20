@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import SetupCheck from "./pages/SetupCheck";
@@ -11,9 +11,12 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
 function App() {
+  const location = useLocation();
+  const hideNavbar = location.pathname === '/login' || location.pathname === '/register';
+
   return (
     <BrowserRouter>
-      <Navbar />
+      {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
