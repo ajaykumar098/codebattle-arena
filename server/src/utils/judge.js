@@ -41,6 +41,8 @@ async function gradeSubmission(problem, code, language = 'python') {
     console.log(`=== PISTON URL ===`);
     console.log(process.env.PISTON_URL || 'http://localhost:2000');
     const { stdout, stderr, compileError, status } = await runCode(wrappedCode, language, tc.input, i);
+    console.log('=== STDERR ===', stderr);
+    console.log('=== COMPILE ERROR ===', compileError);
 
     let passed = false;
     try {
