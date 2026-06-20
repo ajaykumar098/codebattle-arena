@@ -44,7 +44,8 @@ ${indent(code, 4)}
 
 ${parseLines}
 
-        Object result = ${functionName}(${argNames});
+        Main instance = new Main();
+        Object result = instance.${functionName}(${argNames});
         System.out.println(serialize(result));
     }
 
