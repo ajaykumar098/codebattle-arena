@@ -56,6 +56,14 @@ function App() {
           }
         />
       </Routes>
+    </>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
