@@ -9,7 +9,7 @@ interface CodeEditorProps {
 
 export default function CodeEditor({
   value,
-  language = 'javascript',
+  language = 'python',
   onChange,
   height = '400px'
 }: CodeEditorProps) {

@@ -1,0 +1,1 @@
+{"language":"java","version":"15.0.2","files":[{"content":"public class Main { public static void main(String[] args) { System.out.println(\"[0,1]\"); } }"}],"stdin":"[2,7,11,15]\n9"}

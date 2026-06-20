@@ -26,6 +26,9 @@ const problemSchema = new mongoose.Schema({
   examples: [exampleSchema],
   testCases: [testCaseSchema],
   starterCode: { type: String, default: '' },
+  paramTypes: [{ type: String }],
+  returnType: { type: String },
+  javaStarterCode: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now }
 });
 

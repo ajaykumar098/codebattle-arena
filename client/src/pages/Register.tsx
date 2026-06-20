@@ -90,6 +90,9 @@ function Register() {
             className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
             required
           />
+          <p className="text-xs text-slate-500">
+            Password must be at least 6 characters and include uppercase, lowercase, a number, and a special character.
+          </p>
           <input
             name="confirmPassword"
             type="password"

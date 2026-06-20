@@ -1,0 +1,112 @@
+
+import java.util.*;
+
+public class Main {
+    public static int[] twoSum(int[] nums, int target) {
+        java.util.Map<Integer, Integer> map = new java.util.HashMap<>();
+        for (int i = 0; i < nums.length; i++) {
+            int complement = target - nums[i];
+            if (map.containsKey(complement)) {
+                return new int[] { map.get(complement), i };
+            }
+            map.put(nums[i], i);
+        }
+        return new int[] {};
+    }
+
+    public static void main(String[] args) throws Exception {
+        java.util.Scanner scanner = new java.util.Scanner(System.in);
+        java.util.List<String> lineList = new java.util.ArrayList<>();
+        while (scanner.hasNextLine()) {
+            lineList.add(scanner.nextLine());
+        }
+        String[] lines = lineList.toArray(new String[0]);
+
+        int[] arg0 = parseIntArray(lines[0]);
+        int arg1 = Integer.parseInt(lines[1].trim());
+
+        Object result = twoSum(arg0, arg1);
+        System.out.println(serialize(result));
+    }
+
+    static String stripQuotes(String s) {
+        s = s.trim();
+        if (s.length() >= 2 && s.charAt(0) == '"' && s.charAt(s.length() - 1) == '"') {
+            return s.substring(1, s.length() - 1);
+        }
+        return s;
+    }
+
+    static String[] splitTopLevel(String s) {
+        s = s.trim();
+        s = s.substring(1, s.length() - 1);
+        if (s.trim().isEmpty()) return new String[0];
+        java.util.List<String> parts = new java.util.ArrayList<>();
+        int depth = 0;
+        boolean inQuotes = false;
+        StringBuilder cur = new StringBuilder();
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (c == '"') inQuotes = !inQuotes;
+            if (!inQuotes) {
+                if (c == '[') depth++;
+                if (c == ']') depth--;
+            }
+            if (c == ',' && depth == 0 && !inQuotes) {
+                parts.add(cur.toString());
+                cur.setLength(0);
+            } else {
+                cur.append(c);
+            }
+        }
+        parts.add(cur.toString());
+        return parts.toArray(new String[0]);
+    }
+
+    static int[] parseIntArray(String line) {
+        String[] parts = splitTopLevel(line.trim());
+        int[] result = new int[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Integer.parseInt(parts[i].trim());
+        }
+        return result;
+    }
+
+    static double[] parseDoubleArray(String line) {
+        String[] parts = splitTopLevel(line.trim());
+        double[] result = new double[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Double.parseDouble(parts[i].trim());
+        }
+        return result;
+    }
+
+    static boolean[] parseBooleanArray(String line) {
+        String[] parts = splitTopLevel(line.trim());
+        boolean[] result = new boolean[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = Boolean.parseBoolean(parts[i].trim());
+        }
+        return result;
+    }
+
+    static String[] parseStringArray(String line) {
+        String[] parts = splitTopLevel(line.trim());
+        String[] result = new String[parts.length];
+        for (int i = 0; i < parts.length; i++) {
+            result[i] = stripQuotes(parts[i].trim());
+        }
+        return result;
+    }
+
+    static int[][] parseInt2DArray(String line) {
+        String[] outerParts = splitTopLevel(line.trim());
+        int[][] result = new int[outerParts.length][];
+        for (int i = 0; i < outerParts.length; i++) {
+            result[i] = parseIntArray(outerParts[i].trim());
+        }
+        return result;
+    }
+
+    static String serialize(Object result) { if (result == null) return "null"; if (result instanceof int[]) return Arrays.toString((int[]) result).replace(" ", ""); if (result instanceof double[]) return Arrays.toString((double[]) result).replace(" ", ""); if (result instanceof boolean[]) return Arrays.toString((boolean[]) result).replace(" ", ""); if (result instanceof Object[]) { Object[] arr = (Object[]) result; StringBuilder sb = new StringBuilder("["); for (int i = 0; i < arr.length; i++) { if (arr[i] instanceof String) sb.append('"').append(arr[i]).append('"'); else sb.append(arr[i]); if (i < arr.length - 1) sb.append(","); } sb.append("]"); return sb.toString(); } if (result instanceof String) return '"' + (String)result + '"'; if (result instanceof Boolean) return result.toString(); return result.toString(); }
+}

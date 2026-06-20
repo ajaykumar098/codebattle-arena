@@ -1,6 +1,61 @@
+const { runCode } = require('../judge/judge0Service');
+const { buildJavaWrapper } = require('../judge/javaWrapper');
+
 const vm = require('vm');
 
 const TIMEOUT_MS = 3000;
+
+function buildPythonWrapper(code, functionName) {
+  return `
+import json, sys
+
+${code}
+
+_lines = sys.stdin.read().splitlines()
+_args = [json.loads(line) for line in _lines if line.strip() != '']
+_result = ${functionName}(*_args)
+print(json.dumps(_result))
+`;
+}
+
+async function gradeSubmission(problem, code, language = 'python') {
+  const results = [];
+
+  let wrappedCode;
+  if (language === 'java') {
+    wrappedCode = buildJavaWrapper(code, problem.functionName, problem.paramTypes);
+  } else {
+    wrappedCode = buildPythonWrapper(code, problem.functionName);
+  }
+
+  for (let i = 0; i < problem.testCases.length; i++) {
+    const tc = problem.testCases[i];
+    console.log(`--- TEST CASE ${i} ---`);
+    console.log(`Raw length: ${tc.input.length}`);
+    console.log(`Raw bytes: ${Array.from(tc.input).map(c => c.charCodeAt(0)).join(' ')}`);
+    console.log(`Raw string: ${JSON.stringify(tc.input)}`);
+    const { stdout, stderr, compileError, status } = await runCode(wrappedCode, language, tc.input, i);
+
+    let passed = false;
+    try {
+      const parsedStdout = JSON.parse(stdout);
+      const parsedExpected = JSON.parse(tc.expectedOutput);
+      passed = !compileError && !stderr && JSON.stringify(parsedStdout) === JSON.stringify(parsedExpected);
+    } catch (e) {
+      passed = false;
+    }
+
+    console.log(`--- TEST CASE RESULT --- passed: ${passed}, stdout: "${stdout}", expected: "${tc.expectedOutput.trim()}"`);
+    results.push({ passed, status, stdout, expected: tc.expectedOutput });
+  }
+
+  return {
+    passed: results.every(r => r.passed),
+    passedTests: results.filter(r => r.passed).length,
+    totalTests: results.length,
+    results,
+  };
+}
 
 function runTestCase(code, functionName, testCase) {
   const { input, expectedOutput, isHidden } = testCase;
@@ -43,4 +98,4 @@ function runSubmission(code, functionName, testCases) {
   return testCases.map((tc) => runTestCase(code, functionName, tc));
 }
 
-module.exports = { runSubmission };
+module.exports = { runSubmission, runCode, gradeSubmission };

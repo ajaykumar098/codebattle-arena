@@ -1,0 +1,12 @@
+
+import json, sys
+
+def reverseWords(s):
+    words = s.split(" ")
+    reversed_words = [word[::-1] for word in words]
+    return " ".join(reversed_words)
+
+_lines = sys.stdin.read().splitlines()
+_args = [json.loads(line) for line in _lines if line.strip() != '']
+_result = reverseWords(*_args)
+print(json.dumps(_result))

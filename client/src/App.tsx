@@ -5,18 +5,45 @@ import SetupCheck from "./pages/SetupCheck";
 import Dashboard from "./pages/Dashboard";
 import Problems from "./pages/Problems";
 import ProblemDetail from "./pages/ProblemDetail";
+import Coding from "./pages/Coding";
+import PlayWithFriend from "./pages/PlayWithFriend";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Navbar from "./components/Navbar";
 
 function App() {
   return (
     <BrowserRouter>
+      <Navbar />
       <Routes>
-        <Route path="/" element={<Navigate to="/register" replace />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/setup-check" element={<SetupCheck />} />
-        <Route path="/problems" element={<Problems />} />
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Problems />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/problems" element={<Navigate to="/" replace />} />
         <Route path="/problems/:slug" element={<ProblemDetail />} />
+        <Route
+          path="/coding"
+          element={
+            <ProtectedRoute>
+              <Coding />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/play"
+          element={
+            <ProtectedRoute>
+              <PlayWithFriend />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/dashboard"
           element={
