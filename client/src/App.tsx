@@ -10,12 +10,12 @@ import PlayWithFriend from "./pages/PlayWithFriend";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Navbar from "./components/Navbar";
 
-function App() {
+function AppContent() {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login' || location.pathname === '/register';
 
   return (
-    <BrowserRouter>
+    <>
       {!hideNavbar && <Navbar />}
       <Routes>
         <Route path="/register" element={<Register />} />
