@@ -53,6 +53,8 @@ async function gradeSubmission(problem, code, language = 'python') {
       passed = false;
     }
 
+    console.log(`[JUDGE] problem=${problem.slug} lang=${language} testCase=${i} expected=${JSON.stringify(tc.expectedOutput)} actual_stdout=${JSON.stringify(stdout)} stderr=${JSON.stringify(stderr)} compileError=${JSON.stringify(compileError)} passed=${passed}`);
+
     console.log(`--- TEST CASE RESULT --- passed: ${passed}, stdout: "${stdout}", expected: "${tc.expectedOutput.trim()}"`);
     results.push({ passed, status, stdout, expected: tc.expectedOutput });
   }
