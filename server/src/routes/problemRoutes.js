@@ -53,11 +53,7 @@ router.get('/:slug', async (req, res) => {
       return res.status(404).json({ message: 'Problem not found' });
     }
 
-    // Only send visible test cases to the frontend - hidden ones stay server-side
-    const problemData = problem.toObject();
-    problemData.testCases = problemData.testCases.filter(tc => !tc.isHidden);
-
-    res.json(problemData);
+    res.json(problem);
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }
@@ -135,6 +131,61 @@ router.post('/:slug/submit', verifyToken, async (req, res) => {
       results: gradeResult.results,
       xpAwarded
     });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+});
+
+// POST /api/problems/:slug/complete - mark problem as complete and award XP
+router.post('/:slug/complete', verifyToken, async (req, res) => {
+  try {
+    const { allPassed, passedTests, totalTests } = req.body;
+    const problem = await Problem.findOne({ slug: req.params.slug });
+    if (!problem) {
+      return res.status(404).json({ message: 'Problem not found' });
+    }
+
+    const submission = await Submission.create({
+      userId: req.userId,
+      problemId: problem._id,
+      slug: problem.slug,
+      passed: !!allPassed,
+      passedTests: passedTests || 0,
+      totalTests: totalTests || 0
+    });
+
+    let xpAwarded = null;
+    if (allPassed) {
+      const existingPass = await Submission.findOne({
+        userId: req.userId,
+        problemId: problem._id,
+        passed: true,
+        _id: { $ne: submission._id }
+      });
+      if (!existingPass) {
+        const xpValues = { Easy: 10, Medium: 25, Hard: 50 };
+        const coinValues = { Easy: 5, Medium: 10, Hard: 20 };
+        const xpToAdd = xpValues[problem.difficulty] || 0;
+        const coinsToAdd = coinValues[problem.difficulty] || 0;
+
+        const user = await User.findByIdAndUpdate(
+          req.userId,
+          { $inc: { xp: xpToAdd, coins: coinsToAdd } },
+          { new: true }
+        );
+
+        let newRank = 'Bronze';
+        if (user.xp >= 500) newRank = 'Silver';
+        if (user.xp >= 1500) newRank = 'Gold';
+        if (user.xp >= 3000) newRank = 'Platinum';
+        if (user.xp >= 5000) newRank = 'Diamond';
+        await User.findByIdAndUpdate(req.userId, { rank: newRank });
+
+        xpAwarded = user.xp;
+      }
+    }
+
+    res.json({ xpAwarded });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

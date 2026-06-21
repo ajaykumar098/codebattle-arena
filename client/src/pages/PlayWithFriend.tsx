@@ -43,17 +43,12 @@ interface SubmitResult {
   allPassed: boolean;
 }
 
-const LANGUAGES = ['python', 'java'] as const;
 const LANGUAGE_LABELS: Record<string, string> = {
   python: 'Python',
-  java: 'Java',
-  cpp: 'C++',
 };
 
 const MONACO_LANG: Record<string, string> = {
   python: 'python',
-  java: 'java',
-  cpp: 'cpp',
 };
 
 export default function PlayWithFriend() {
@@ -61,7 +56,6 @@ export default function PlayWithFriend() {
 
   const [screen, setScreen] = useState<Screen>('lobby');
   const [mode, setMode] = useState<'create' | 'join'>('create');
-  const [language, setLanguage] = useState<'python' | 'java'>('python');
   const [timerMinutes, setTimerMinutes] = useState(10);
   const [joinCode, setJoinCode] = useState('');
   const [error, setError] = useState('');
@@ -147,7 +141,7 @@ export default function PlayWithFriend() {
     setError('');
     socketRef.current.emit(
       'create_room',
-      { language, timerMinutes },
+      { language: 'python', timerMinutes },
       (res: { error?: string; room?: Room }) => {
         setLoading(false);
         if (res.error) return setError(res.error);
@@ -259,28 +253,6 @@ export default function PlayWithFriend() {
 
           {mode === 'create' ? (
             <div className="mt-6 space-y-5 rounded-xl border border-slate-800 bg-slate-900 p-6">
-              {/* Language selector */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">
-                  Language
-                </label>
-                <div className="flex gap-2">
-                  {LANGUAGES.map((lang) => (
-                    <button
-                      key={lang}
-                      onClick={() => setLanguage(lang as 'python' | 'java')}
-                      className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
-                        language === lang
-                          ? 'bg-indigo-500 text-white shadow'
-                          : 'text-slate-400 hover:text-slate-200'
-                      }`}
-                    >
-                      {LANGUAGE_LABELS[lang]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Timer */}
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-400">

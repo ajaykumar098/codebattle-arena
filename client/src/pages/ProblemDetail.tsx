@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import CodeEditor from '../components/CodeEditor';
+import { runPythonTestCase } from '../utils/runPython';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -19,7 +20,8 @@ interface Problem {
   tags: string[];
   examples: Example[];
   starterCode: string;
-  javaStarterCode: string;
+  functionName: string;
+  testCases: { input: string; expectedOutput: string; isHidden: boolean }[];
 }
 
 interface RunState {
@@ -54,8 +56,8 @@ export default function ProblemDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [code, setCode] = useState('');
-  const [language, setLanguage] = useState<'python' | 'java'>('python');
   const [submitting, setSubmitting] = useState(false);
+  const [pyodideLoading, setPyodideLoading] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
 
   useEffect(() => {
@@ -70,39 +72,78 @@ export default function ProblemDetail() {
       })
       .then((data) => {
         setProblem(data);
-        setCode(language === 'java' ? (data.javaStarterCode || '') : (data.starterCode || ''));
+        setCode(data.starterCode || '');
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
-  }, [slug, language]);
+  }, [slug]);
 
   const handleSubmit = async () => {
     if (!problem) return;
     setSubmitting(true);
     setResult(null);
+    setError('');
+
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/problems/${problem.slug}/submit`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ code, language }),
-      });
-      const data = await res.json();
-      setResult(data);
-    } catch {
-      setResult(null);
+      // Check if Pyodide needs to be loaded
+      const isFirstLoad = !(window as any).pyodide;
+      if (isFirstLoad) {
+        setPyodideLoading(true);
+      }
+
+      let passedTests = 0;
+      let totalTests = problem.testCases.length;
+
+      for (const testCase of problem.testCases) {
+        const { output, error: pyError } = await runPythonTestCase(
+          code,
+          problem.functionName,
+          testCase.input
+        );
+
+        if (pyError) {
+          setError(pyError);
+          setResult({ totalTests, passedTests, allPassed: false, xpAwarded: null });
+          return;
+        }
+
+        const parsedOutput = JSON.parse(output);
+        const parsedExpected = JSON.parse(testCase.expectedOutput);
+
+        if (JSON.stringify(parsedOutput) === JSON.stringify(parsedExpected)) {
+          passedTests++;
+        }
+      }
+
+      const allPassed = passedTests === totalTests;
+      let xpAwarded = null;
+
+      // Award XP if all tests passed
+      if (allPassed) {
+        try {
+          const token = localStorage.getItem('token');
+          const completeRes = await fetch(`${API_BASE}/api/problems/${problem.slug}/complete`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ allPassed, passedTests, totalTests }),
+          });
+          const completeData = await completeRes.json();
+          xpAwarded = completeData.xpAwarded || null;
+        } catch (xpErr) {
+          // Don't block showing results if XP saving fails
+          console.error('Failed to save XP:', xpErr);
+        }
+      }
+
+      setResult({ totalTests, passedTests, allPassed, xpAwarded });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleLanguageChange = (newLang: 'python' | 'java') => {
-    setLanguage(newLang);
-    if (problem) {
-      setCode(newLang === 'java' ? (problem.javaStarterCode || '') : (problem.starterCode || ''));
+      setPyodideLoading(false);
     }
   };
 
@@ -215,29 +256,19 @@ export default function ProblemDetail() {
 
         {/* Code editor */}
         <div className="mb-4">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Your Solution</h2>
-            <select
-              value={language}
-              onChange={(e) => handleLanguageChange(e.target.value as 'python' | 'java')}
-              className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-300 focus:border-indigo-500 focus:outline-none"
-            >
-              <option value="python">Python</option>
-              <option value="java">Java</option>
-            </select>
-          </div>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Your Solution</h2>
           <div className="overflow-hidden rounded-xl border border-slate-700">
-            <CodeEditor value={code} onChange={setCode} language={language} height="380px" />
+            <CodeEditor value={code} onChange={setCode} language="python" height="380px" />
           </div>
         </div>
 
         {/* Submit button */}
         <button
           onClick={handleSubmit}
-          disabled={submitting}
+          disabled={submitting || pyodideLoading}
           className="w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-400 disabled:opacity-50"
         >
-          {submitting ? 'Submitting...' : 'Submit Solution'}
+          {pyodideLoading ? 'Loading Python runtime (first time only)...' : submitting ? 'Submitting...' : 'Submit Solution'}
         </button>
 
         {/* Result panel */}

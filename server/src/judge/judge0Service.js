@@ -1,7 +1,5 @@
 const LANGUAGE_CONFIG = {
   python: { language: 'python', version: '3.12.0' },
-  java: { language: 'java', version: '15.0.2' },
-  c: { language: 'c', version: '10.2.0' },
 };
 
 async function runCode(code, language, stdin, testCaseIndex = 0) {

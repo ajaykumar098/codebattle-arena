@@ -1,5 +1,4 @@
 const { runCode } = require('../judge/judge0Service');
-const { buildJavaWrapper } = require('../judge/javaWrapper');
 
 const vm = require('vm');
 
@@ -21,12 +20,7 @@ print(json.dumps(_result))
 async function gradeSubmission(problem, code, language = 'python') {
   const results = [];
 
-  let wrappedCode;
-  if (language === 'java') {
-    wrappedCode = buildJavaWrapper(code, problem.functionName, problem.paramTypes);
-  } else {
-    wrappedCode = buildPythonWrapper(code, problem.functionName);
-  }
+  const wrappedCode = buildPythonWrapper(code, problem.functionName);
 
   for (let i = 0; i < problem.testCases.length; i++) {
     const tc = problem.testCases[i];

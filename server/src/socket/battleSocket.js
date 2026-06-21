@@ -68,7 +68,7 @@ module.exports = function initBattleSocket(io) {
             slug: problem.slug,
             description: problem.description,
             examples: problem.examples,
-            starterCode: language === 'java' ? problem.javaStarterCode : problem.starterCode,
+            starterCode: problem.starterCode,
             functionName: problem.functionName,
             testCases: problem.testCases,
           },
