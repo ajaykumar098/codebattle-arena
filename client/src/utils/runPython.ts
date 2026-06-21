@@ -36,6 +36,7 @@ export async function runPythonTestCase(
 
     // Set the input value in the Python environment
     pyodide.globals.set('input', input);
+    pyodide.globals.set('functionName', functionName);
 
     // Build the Python wrapper script with error handling
     const pythonScript = `
@@ -47,31 +48,43 @@ from io import StringIO
 # Capture stdout and stderr
 old_stdout = sys.stdout
 old_stderr = sys.stderr
+old_stdin = sys.stdin
 sys.stdout = captured_output = StringIO()
 sys.stderr = captured_error = StringIO()
 
 try:
+    # Always set stdin first (doesn't hurt function mode)
+    sys.stdin = StringIO(input)
+    
+    # Run the user code
 ${indentCode(userCode)}
-
-    # Parse input - newline-separated JSON values
-    lines = input.strip().split('\\n')
-    args = [json.loads(line) for line in lines if line.strip()]
-
-    # Call the user's function
-    result = ${functionName}(*args)
-
-    # Print result as JSON
-    print(json.dumps(result))
+    
+    # Check if the function exists in the local namespace
+    has_function = functionName in globals()
+    if has_function:
+        # Function-based solution: parse input as JSON and call the function
+        lines = input.strip().split('\\n')
+        args = [json.loads(line) for line in lines if line.strip()]
+        result = globals()[functionName](*args)
+        print(json.dumps(result))
 except Exception as e:
     # Capture the full traceback
     traceback.print_exc()
     print(f"ERROR: {type(e).__name__}: {e}", file=sys.stderr)
 finally:
-    # Restore stdout and stderr
+    # Restore stdout, stderr, and stdin
     sys.stdout = old_stdout
     sys.stderr = old_stderr
-    output = captured_output.getvalue()
+    sys.stdin = old_stdin
+    raw_output = captured_output.getvalue()
     error_output = captured_error.getvalue()
+    
+    # For standalone scripts, extract the last non-empty line as the final answer
+    if not has_function:
+        output_lines = [line for line in raw_output.strip().split('\\n') if line.strip()]
+        output = output_lines[-1] if output_lines else ''
+    else:
+        output = raw_output
 `;
 
     // Run the Python code

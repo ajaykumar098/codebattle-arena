@@ -256,10 +256,18 @@ export default function ProblemDetail() {
 
         {/* Code editor */}
         <div className="mb-4">
-          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-400">Your Solution</h2>
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400">Your Solution</h2>
+            <span className="rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-xs font-semibold text-blue-300">
+              Python Only
+            </span>
+          </div>
           <div className="overflow-hidden rounded-xl border border-slate-700">
             <CodeEditor value={code} onChange={setCode} language="python" height="380px" />
           </div>
+          <p className="mt-2 text-xs text-slate-500">
+            Write a function (e.g., def twoSum(nums, target): ...) OR a standalone script that reads input and prints your final answer as JSON on the last line (e.g., print(json.dumps(result))).
+          </p>
         </div>
 
         {/* Submit button */}
