@@ -88,6 +88,8 @@ finally:
 `;
 
     // Run the Python code
+    console.log('=== FULL PYTHON SCRIPT ===');
+    console.log(pythonScript);
     await pyodide.runPythonAsync(pythonScript);
 
     // Get the captured output and error
