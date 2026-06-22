@@ -55,6 +55,7 @@ export default function ProblemDetail() {
   const [problem, setProblem] = useState<Problem | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [code, setCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [pyodideLoading, setPyodideLoading] = useState(false);
@@ -63,6 +64,7 @@ export default function ProblemDetail() {
   useEffect(() => {
     setLoading(true);
     setError('');
+    setSubmitError('');
     setResult(null);
 
     fetch(`${API_BASE}/api/problems/${slug}`)
@@ -72,7 +74,7 @@ export default function ProblemDetail() {
       })
       .then((data) => {
         setProblem(data);
-        setCode(data.starterCode || '');
+        setCode('');
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -83,6 +85,7 @@ export default function ProblemDetail() {
     setSubmitting(true);
     setResult(null);
     setError('');
+    setSubmitError('');
 
     try {
       // Check if Pyodide needs to be loaded
@@ -93,6 +96,7 @@ export default function ProblemDetail() {
 
       let passedTests = 0;
       let totalTests = problem.testCases.length;
+      let lastError = '';
 
       for (const testCase of problem.testCases) {
         const { output, error: pyError } = await runPythonTestCase(
@@ -102,9 +106,9 @@ export default function ProblemDetail() {
         );
 
         if (pyError) {
-          setError(pyError);
-          setResult({ totalTests, passedTests, allPassed: false, xpAwarded: null });
-          return;
+          // Count this test as failed, store error, and continue
+          lastError = pyError;
+          continue;
         }
 
         const parsedOutput = JSON.parse(output);
@@ -139,6 +143,7 @@ export default function ProblemDetail() {
       }
 
       setResult({ totalTests, passedTests, allPassed, xpAwarded });
+      setSubmitError(lastError);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -282,16 +287,22 @@ export default function ProblemDetail() {
         {/* Result panel */}
         {result && (
           <div className={`mt-4 rounded-xl border p-5 ${
-            result.allPassed
+            result.allPassed && !submitError
               ? 'border-emerald-500/30 bg-emerald-500/10'
               : 'border-rose-500/30 bg-rose-500/10'
           }`}>
-            <p className={`font-semibold ${result.allPassed ? 'text-emerald-300' : 'text-rose-300'}`}>
-              {result.allPassed ? '✓ All tests passed!' : '✗ Some tests failed'}
+            <p className={`font-semibold ${result.allPassed && !submitError ? 'text-emerald-300' : 'text-rose-300'}`}>
+              {result.allPassed && !submitError ? '✓ All tests passed!' : '✗ Some tests failed'}
             </p>
             <p className="mt-1 text-sm text-slate-400">
               Passed {result.passedTests} / {result.totalTests} test cases
             </p>
+            {submitError && (
+              <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
+                <p className="text-xs font-semibold text-rose-300">Error:</p>
+                <p className="mt-1 text-xs text-rose-200 font-mono whitespace-pre-wrap">{submitError}</p>
+              </div>
+            )}
             {result.xpAwarded != null && (
               <p className="mt-1 text-sm text-indigo-300">
                 XP awarded — your total XP is now {result.xpAwarded}
