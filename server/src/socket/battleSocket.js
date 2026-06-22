@@ -75,7 +75,7 @@ module.exports = function initBattleSocket(io) {
 
         socket.join(room.code);
         socket.roomCode = room.code;
-        callback({ room: { ...room, problem: { ...room.problem, testCases: undefined } } });
+        callback({ room });
       } catch (err) {
         callback({ error: err.message });
       }
@@ -96,10 +96,10 @@ module.exports = function initBattleSocket(io) {
       // Notify host that guest joined
       io.to(roomCode.toUpperCase()).emit('guest_joined', {
         guestUsername: socket.username,
-        room: { ...result.room, problem: { ...result.room.problem, testCases: undefined } },
+        room: result.room,
       });
 
-      callback({ room: { ...result.room, problem: { ...result.room.problem, testCases: undefined } } });
+      callback({ room: result.room });
     });
 
     // HOST: start the countdown (both players ready)
@@ -125,7 +125,7 @@ module.exports = function initBattleSocket(io) {
           room.startedAt = Date.now();
 
           io.to(socket.roomCode).emit('battle_start', {
-            problem: { ...room.problem, testCases: undefined },
+            problem: room.problem,
             timerMinutes: room.timerMinutes,
             language: room.language,
             startedAt: room.startedAt,
