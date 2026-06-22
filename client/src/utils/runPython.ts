@@ -53,20 +53,17 @@ sys.stdout = captured_output = StringIO()
 sys.stderr = captured_error = StringIO()
 
 try:
-    # Always set stdin first (doesn't hurt function mode)
+    # Set stdin
     sys.stdin = StringIO(input)
     
     # Run the user code
 ${indentCode(userCode)}
     
-    # Check if the function exists in the local namespace
-    has_function = functionName in globals()
-    if has_function:
-        # Function-based solution: parse input as JSON and call the function
-        lines = input.strip().split('\\n')
-        args = [json.loads(line) for line in lines if line.strip()]
-        result = globals()[functionName](*args)
-        print(json.dumps(result))
+    # Function-based solution: parse input as JSON and call the function
+    lines = input.strip().split('\\n')
+    args = [json.loads(line) for line in lines if line.strip()]
+    result = globals()[functionName](*args)
+    print(json.dumps(result))
 except Exception as e:
     # Capture the full traceback
     traceback.print_exc()
@@ -78,13 +75,7 @@ finally:
     sys.stdin = old_stdin
     raw_output = captured_output.getvalue()
     error_output = captured_error.getvalue()
-    
-    # For standalone scripts, extract the last non-empty line as the final answer
-    if not has_function:
-        output_lines = [line for line in raw_output.strip().split('\\n') if line.strip()]
-        output = output_lines[-1] if output_lines else ''
-    else:
-        output = raw_output
+    output = raw_output
 `;
 
     // Run the Python code

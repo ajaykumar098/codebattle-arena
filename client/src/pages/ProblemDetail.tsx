@@ -271,7 +271,7 @@ export default function ProblemDetail() {
             <CodeEditor value={code} onChange={setCode} language="python" height="380px" />
           </div>
           <p className="mt-2 text-xs text-slate-500">
-            Write a function (e.g., def twoSum(nums, target): ...) OR a standalone script that reads input and prints your final answer as JSON on the last line (e.g., print(json.dumps(result))).
+            Write your solution as a function — e.g., def twoSum(nums, target): ...
           </p>
         </div>
 
