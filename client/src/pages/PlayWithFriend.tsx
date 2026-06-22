@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import CodeEditor from '../components/CodeEditor';
+import { runPythonTestCase } from '../utils/runPython';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -17,6 +18,8 @@ interface Problem {
   description: string;
   examples: { input: string; output: string; explanation?: string }[];
   starterCode: string;
+  functionName: string;
+  testCases: { input: string; expectedOutput: string; isHidden: boolean }[];
 }
 
 interface Room {
@@ -68,9 +71,12 @@ export default function PlayWithFriend() {
   const [code, setCode] = useState('');
   const [submitResult, setSubmitResult] = useState<SubmitResult | null>(null);
   const [runResult, setRunResult] = useState<SubmitResult | null>(null);
+  const [runError, setRunError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [opponentStatus, setOpponentStatus] = useState<string>('');
   const [battleResult, setBattleResult] = useState<BattleResult | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pyodideLoading, setPyodideLoading] = useState(false);
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const userId = JSON.parse(localStorage.getItem('user') || '{}')?.id;
@@ -90,10 +96,10 @@ export default function PlayWithFriend() {
       setCountdownCount(count);
     });
 
-    socket.on('battle_start', ({ problem, timerMinutes: mins, startedAt }) => {
+    socket.on('battle_start', ({ timerMinutes: mins, startedAt }) => {
       setScreen('battle');
       setCountdownCount(null);
-      setCode(problem.starterCode || '');
+      setCode('');
       const elapsed = Math.floor((Date.now() - startedAt) / 1000);
       const totalSeconds = mins * 60 - elapsed;
       setTimeLeft(totalSeconds);
@@ -176,39 +182,122 @@ export default function PlayWithFriend() {
     });
   };
 
-  const handleSubmit = () => {
-    if (!socketRef.current || submitting) return;
+  const handleSubmit = async () => {
+    if (!socketRef.current || submitting || !room) return;
     setSubmitting(true);
-    socketRef.current.emit(
-      'battle_submit',
-      { code },
-      (res: { error?: string } & SubmitResult) => {
-        setSubmitting(false);
-        if (res.error) return setError(res.error);
-        setSubmitResult(res);
-        setRunResult(null);
+    setSubmitResult(null);
+    setSubmitError('');
+    setError('');
+
+    try {
+      // Check if Pyodide needs to be loaded
+      const isFirstLoad = !(window as any).pyodide;
+      if (isFirstLoad) {
+        setPyodideLoading(true);
       }
-    );
+
+      let passedTests = 0;
+      let totalTests = 0;
+      let lastError = '';
+
+      // Run ALL test cases (visible + hidden)
+      totalTests = room.problem.testCases?.length || 0;
+
+      for (const testCase of room.problem.testCases || []) {
+        const { output, error: pyError } = await runPythonTestCase(
+          code,
+          room.problem.functionName || '',
+          testCase.input
+        );
+
+        if (pyError) {
+          // Count this test as failed, store error, and continue
+          lastError = pyError;
+          continue;
+        }
+
+        const parsedOutput = JSON.parse(output);
+        const parsedExpected = JSON.parse(testCase.expectedOutput);
+
+        if (JSON.stringify(parsedOutput) === JSON.stringify(parsedExpected)) {
+          passedTests++;
+        }
+      }
+
+      const allPassed = passedTests === totalTests;
+      setSubmitResult({ totalTests, passedTests, allPassed });
+      setSubmitError(lastError);
+      setRunResult(null);
+
+      // Emit the result via socket (keep existing socket pattern)
+      socketRef.current.emit(
+        'battle_submit',
+        { passedTests, totalTests, allPassed },
+        (res: { error?: string }) => {
+          setSubmitting(false);
+          if (res.error) setError(res.error);
+        }
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong');
+      setSubmitting(false);
+    } finally {
+      setPyodideLoading(false);
+    }
   };
 
   const handleRun = async () => {
     if (!room || submitting) return;
     setSubmitting(true);
+    setRunResult(null);
+    setRunError('');
     setError('');
+
     try {
-      const response = await fetch(`${API_BASE}/api/problems/${room.problem.slug}/run`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code, language: room.language }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.message || 'Run failed');
-      setRunResult(data);
+      // Check if Pyodide needs to be loaded
+      const isFirstLoad = !(window as any).pyodide;
+      if (isFirstLoad) {
+        setPyodideLoading(true);
+      }
+
+      let passedTests = 0;
+      let totalTests = 0;
+      let lastError = '';
+
+      // Only run visible test cases
+      const visibleTestCases = room.problem.testCases?.filter((tc: any) => !tc.isHidden) || [];
+      totalTests = visibleTestCases.length;
+
+      for (const testCase of visibleTestCases) {
+        const { output, error: pyError } = await runPythonTestCase(
+          code,
+          room.problem.functionName || '',
+          testCase.input
+        );
+
+        if (pyError) {
+          // Count this test as failed, store error, and continue
+          lastError = pyError;
+          continue;
+        }
+
+        const parsedOutput = JSON.parse(output);
+        const parsedExpected = JSON.parse(testCase.expectedOutput);
+
+        if (JSON.stringify(parsedOutput) === JSON.stringify(parsedExpected)) {
+          passedTests++;
+        }
+      }
+
+      const allPassed = passedTests === totalTests;
+      setRunResult({ totalTests, passedTests, allPassed });
+      setRunError(lastError);
       setSubmitResult(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setSubmitting(false);
+      setPyodideLoading(false);
     }
   };
 
@@ -481,24 +570,44 @@ export default function PlayWithFriend() {
               </div>
 
               {submitResult && (
-                <div className={`rounded-xl border p-4 text-sm ${
-                  submitResult.allPassed
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                    : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                <div className={`rounded-xl border p-4 ${
+                  submitResult.allPassed && !submitError
+                    ? 'border-emerald-500/30 bg-emerald-500/10'
+                    : 'border-rose-500/30 bg-rose-500/10'
                 }`}>
-                  <p className="font-semibold">Submission Result</p>
-                  <p className="mt-1">{submitResult.allPassed ? '✓ All tests passed!' : `${submitResult.passedTests}/${submitResult.totalTests} tests passed`}</p>
+                  <p className={`font-semibold ${submitResult.allPassed && !submitError ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    {submitResult.allPassed && !submitError ? '✓ All tests passed!' : '✗ Some tests failed'}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Passed {submitResult.passedTests} / {submitResult.totalTests} test cases
+                  </p>
+                  {submitError && (
+                    <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
+                      <p className="text-xs font-semibold text-rose-300">Error:</p>
+                      <p className="mt-1 text-xs text-rose-200 font-mono whitespace-pre-wrap">{submitError}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
               {runResult && (
-                <div className={`rounded-xl border p-4 text-sm ${
-                  runResult.allPassed
-                    ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
-                    : 'border-amber-500/30 bg-amber-500/10 text-amber-300'
+                <div className={`rounded-xl border p-4 ${
+                  runResult.allPassed && !runError
+                    ? 'border-emerald-500/30 bg-emerald-500/10'
+                    : 'border-rose-500/30 bg-rose-500/10'
                 }`}>
-                  <p className="font-semibold">Test Results</p>
-                  <p className="mt-1">{runResult.allPassed ? '✓ All tests passed!' : `${runResult.passedTests}/${runResult.totalTests} tests passed`}</p>
+                  <p className={`font-semibold ${runResult.allPassed && !runError ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    {runResult.allPassed && !runError ? '✓ All tests passed!' : '✗ Some tests failed'}
+                  </p>
+                  <p className="mt-1 text-sm text-slate-400">
+                    Passed {runResult.passedTests} / {runResult.totalTests} test cases
+                  </p>
+                  {runError && (
+                    <div className="mt-3 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3">
+                      <p className="text-xs font-semibold text-rose-300">Error:</p>
+                      <p className="mt-1 text-xs text-rose-200 font-mono whitespace-pre-wrap">{runError}</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -511,17 +620,17 @@ export default function PlayWithFriend() {
               <div className="flex gap-2">
                 <button
                   onClick={handleRun}
-                  disabled={submitting}
+                  disabled={submitting || pyodideLoading}
                   className="flex-1 rounded-xl bg-slate-700 py-3 text-sm font-semibold text-white shadow-lg hover:bg-slate-600 disabled:opacity-50"
                 >
-                  {submitting ? 'Running...' : 'Run Tests'}
+                  {pyodideLoading ? 'Loading Python runtime...' : submitting ? 'Running...' : 'Run Tests'}
                 </button>
                 <button
                   onClick={handleSubmit}
-                  disabled={submitting || !!submitResult?.allPassed}
+                  disabled={submitting || pyodideLoading || !!submitResult?.allPassed}
                   className="flex-1 rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 disabled:opacity-50"
                 >
-                  {submitting ? 'Submitting...' : submitResult?.allPassed ? 'Submitted ✓' : 'Submit Solution'}
+                  {pyodideLoading ? 'Loading Python runtime...' : submitting ? 'Submitting...' : submitResult?.allPassed ? 'Submitted ✓' : 'Submit Solution'}
                 </button>
               </div>
             </div>

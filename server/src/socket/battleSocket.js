@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
 const { createRoom, getRoom, joinRoom, recordSubmission, deleteRoom } = require('../utils/roomManager');
-const { gradeSubmission } = require('../utils/judge');
 const Problem = require('../models/Problem');
 
 function determineWinner(room) {
@@ -152,16 +151,12 @@ module.exports = function initBattleSocket(io) {
     });
 
     // PLAYER: submit code during battle
-    socket.on('battle_submit', async ({ code }, callback) => {
+    socket.on('battle_submit', async ({ passedTests, totalTests, allPassed }, callback) => {
       const room = getRoom(socket.roomCode);
       if (!room) return callback?.({ error: 'Room not found' });
       if (room.status !== 'active') return callback?.({ error: 'Battle not active' });
 
-      const gradeResult = await gradeSubmission(room.problem, code, room.language);
-      const passedTests = gradeResult.passedTests;
-      const totalTests = gradeResult.totalTests;
-      const allPassed = gradeResult.passed;
-
+      // Use client-provided results (graded locally with Pyodide)
       recordSubmission(socket.roomCode, socket.userId, { passedTests, totalTests, allPassed });
 
       // Tell the submitter their result
