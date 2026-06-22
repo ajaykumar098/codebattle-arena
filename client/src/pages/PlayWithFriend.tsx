@@ -280,6 +280,9 @@ export default function PlayWithFriend() {
           continue;
         }
 
+        console.log('RAW OUTPUT:', JSON.stringify(output));
+        console.log('RAW EXPECTED:', JSON.stringify(testCase.expectedOutput));
+
         const parsedOutput = JSON.parse(output);
         const parsedExpected = JSON.parse(testCase.expectedOutput);
 
@@ -567,6 +570,9 @@ export default function PlayWithFriend() {
                   height="420px"
                 />
               </div>
+              <p className="text-xs text-slate-400">
+                Write a function (e.g., def twoSum(nums, target): ...) OR a standalone script that reads input and prints your final answer as JSON on the last line (e.g., print(json.dumps(result))).
+              </p>
 
               {submitResult && (
                 <div className={`rounded-xl border p-4 ${
