@@ -264,11 +264,10 @@ export default function PlayWithFriend() {
       let totalTests = 0;
       let lastError = '';
 
-      // Only run visible test cases
-      const visibleTestCases = room.problem.testCases?.filter((tc: any) => !tc.isHidden) || [];
-      totalTests = visibleTestCases.length;
+      // Run ALL test cases
+      totalTests = room.problem.testCases?.length || 0;
 
-      for (const testCase of visibleTestCases) {
+      for (const testCase of room.problem.testCases || []) {
         const { output, error: pyError } = await runPythonTestCase(
           code,
           room.problem.functionName || '',
