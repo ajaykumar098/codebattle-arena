@@ -191,7 +191,7 @@ export default function PlayWithFriend() {
 
     try {
       // Check if Pyodide needs to be loaded
-      const isFirstLoad = !(window as any).pyodide;
+      const isFirstLoad = !(window as { pyodide?: unknown }).pyodide;
       if (isFirstLoad) {
         setPyodideLoading(true);
       }
@@ -255,7 +255,7 @@ export default function PlayWithFriend() {
 
     try {
       // Check if Pyodide needs to be loaded
-      const isFirstLoad = !(window as any).pyodide;
+      const isFirstLoad = !(window as { pyodide?: unknown }).pyodide;
       if (isFirstLoad) {
         setPyodideLoading(true);
       }

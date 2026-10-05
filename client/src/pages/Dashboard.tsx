@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 type User = {
   id: string;
@@ -16,7 +18,7 @@ type DashboardStats = {
   rank: string;
   totalSolved: number;
   solvedByDifficulty: { Easy: number; Medium: number; Hard: number };
-  recentSubmissions: any[];
+  recentSubmissions: unknown[];
 };
 
 function Dashboard() {
@@ -37,7 +39,7 @@ function Dashboard() {
         if (!res.ok) throw new Error("Failed to load dashboard");
         const data = await res.json();
         setStats(data);
-        
+
         // Update localStorage with fresh user data
         const userJson = localStorage.getItem("user");
         if (userJson) {
@@ -47,7 +49,7 @@ function Dashboard() {
           user.rank = data.rank;
           localStorage.setItem("user", JSON.stringify(user));
         }
-      } catch (err) {
+      } catch {
         setError("Failed to load dashboard stats");
       } finally {
         setLoading(false);
@@ -55,7 +57,7 @@ function Dashboard() {
     };
 
     fetchStats();
-  }, []);
+  }, [API_BASE]);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -65,9 +67,9 @@ function Dashboard() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
+      <main className="min-h-screen px-4 py-10 bg-[#0a0a0a]">
         <div className="mx-auto max-w-2xl text-center">
-          <p className="text-slate-400">Loading...</p>
+          <p className="text-[#a1a1aa]">Loading...</p>
         </div>
       </main>
     );
@@ -75,8 +77,8 @@ function Dashboard() {
 
   if (error || !stats) {
     return (
-      <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
-        <div className="mx-auto max-w-2xl rounded-xl border border-rose-500/30 bg-rose-500/10 p-6 text-rose-300">
+      <main className="min-h-screen px-4 py-10 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-2xl bg-[#f43f5e]/10 border border-[#f43f5e]/30 p-6 text-[#f43f5e] rounded-[var(--radius-lg)]">
           {error || "Failed to load dashboard"}
         </div>
       </main>
@@ -87,57 +89,56 @@ function Dashboard() {
   const user: User | null = userJson ? JSON.parse(userJson) : null;
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100">
-      <div className="mx-auto max-w-2xl rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
-        <div className="flex items-center justify-between">
+    <main className="min-h-screen px-4 py-10 bg-[#0a0a0a]">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">CodeBattle Arena</p>
-            <h1 className="mt-2 text-3xl font-bold">Welcome, {user?.username || "User"}</h1>
+            <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">CodeBattle Arena</p>
+            <h1 className="mt-2 text-[clamp(2rem,6vw,3rem)] font-semibold text-[#e5e5e5] font-mono">
+              Welcome, {user?.username || "User"}
+            </h1>
           </div>
-          <button
-            onClick={handleLogout}
-            className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
-          >
+          <Button variant="secondary" onClick={handleLogout}>
             Logout
-          </button>
+          </Button>
         </div>
 
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">XP</p>
-            <p className="mt-1 text-2xl font-bold text-indigo-300">{stats.xp}</p>
-          </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">Coins</p>
-            <p className="mt-1 text-2xl font-bold text-amber-300">{stats.coins}</p>
-          </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">Rank</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">{stats.rank}</p>
-          </div>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">XP</p>
+            <p className="mt-1 text-2xl font-semibold text-[#e5e5e5] font-mono">{stats.xp}</p>
+          </Card>
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">Coins</p>
+            <p className="mt-1 text-2xl font-semibold text-[#e5e5e5] font-mono">{stats.coins}</p>
+          </Card>
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">Rank</p>
+            <p className="mt-1 text-2xl font-semibold text-[#10b981] font-mono">{stats.rank}</p>
+          </Card>
         </div>
 
-        <div className="mt-8 grid grid-cols-3 gap-4">
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">Total Solved</p>
-            <p className="mt-1 text-2xl font-bold text-slate-200">{stats.totalSolved}</p>
-          </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">Easy</p>
-            <p className="mt-1 text-2xl font-bold text-emerald-300">{stats.solvedByDifficulty.Easy}</p>
-          </div>
-          <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-            <p className="text-sm text-slate-400">Medium</p>
-            <p className="mt-1 text-2xl font-bold text-amber-300">{stats.solvedByDifficulty.Medium}</p>
-          </div>
+        <div className="grid grid-cols-3 gap-4 mb-4">
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">Total Solved</p>
+            <p className="mt-1 text-2xl font-semibold text-[#e5e5e5] font-mono">{stats.totalSolved}</p>
+          </Card>
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">Easy</p>
+            <p className="mt-1 text-2xl font-semibold text-[#10b981] font-mono">{stats.solvedByDifficulty.Easy}</p>
+          </Card>
+          <Card className="text-center">
+            <p className="text-sm text-[#a1a1aa] font-mono">Medium</p>
+            <p className="mt-1 text-2xl font-semibold text-[#f59e0b] font-mono">{stats.solvedByDifficulty.Medium}</p>
+          </Card>
         </div>
 
-        <div className="mt-4 rounded-xl border border-slate-700 bg-slate-950/60 p-5 text-center">
-          <p className="text-sm text-slate-400">Hard</p>
-          <p className="mt-1 text-2xl font-bold text-rose-300">{stats.solvedByDifficulty.Hard}</p>
-        </div>
+        <Card className="text-center mb-8">
+          <p className="text-sm text-[#a1a1aa] font-mono">Hard</p>
+          <p className="mt-1 text-2xl font-semibold text-[#f43f5e] font-mono">{stats.solvedByDifficulty.Hard}</p>
+        </Card>
 
-        <p className="mt-8 text-sm text-slate-400">{user?.email || ""}</p>
+        <p className="text-sm text-[#a1a1aa]">{user?.email || ""}</p>
       </div>
     </main>
   );

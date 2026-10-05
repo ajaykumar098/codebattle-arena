@@ -62,22 +62,26 @@ export default function ProblemDetail() {
   const [result, setResult] = useState<SubmitResult | null>(null);
 
   useEffect(() => {
-    setLoading(true);
-    setError('');
-    setSubmitError('');
-    setResult(null);
+    const loadProblem = async () => {
+      setLoading(true);
+      setError('');
+      setSubmitError('');
+      setResult(null);
 
-    fetch(`${API_BASE}/api/problems/${slug}`)
-      .then((res) => {
+      try {
+        const res = await fetch(`${API_BASE}/api/problems/${slug}`);
         if (!res.ok) throw new Error('Problem not found');
-        return res.json();
-      })
-      .then((data) => {
+        const data = await res.json();
         setProblem(data);
         setCode('');
-      })
-      .catch((err) => setError(err.message))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Problem not found');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProblem();
   }, [slug]);
 
   const handleSubmit = async () => {
@@ -89,13 +93,13 @@ export default function ProblemDetail() {
 
     try {
       // Check if Pyodide needs to be loaded
-      const isFirstLoad = !(window as any).pyodide;
+      const isFirstLoad = !(window as { pyodide?: unknown }).pyodide;
       if (isFirstLoad) {
         setPyodideLoading(true);
       }
 
       let passedTests = 0;
-      let totalTests = problem.testCases.length;
+      const totalTests = problem.testCases.length;
       let lastError = '';
 
       for (const testCase of problem.testCases) {

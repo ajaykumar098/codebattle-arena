@@ -1,18 +1,18 @@
 declare global {
   interface Window {
-    pyodide: any;
-    loadPyodide: () => Promise<any>;
+    pyodide: unknown;
+    loadPyodide: () => Promise<unknown>;
   }
 }
 
-let pyodideInstance: any = null;
+let pyodideInstance: unknown = null;
 
 function indentCode(code: string, spaces: number = 4): string {
   const indent = ' '.repeat(spaces);
   return code.split('\n').map(line => indent + line).join('\n');
 }
 
-export async function loadPyodideRuntime(): Promise<any> {
+export async function loadPyodideRuntime(): Promise<unknown> {
   if (window.pyodide) {
     return window.pyodide;
   }
@@ -32,7 +32,10 @@ export async function runPythonTestCase(
   input: string
 ): Promise<{ output: string; error: string | null }> {
   try {
-    const pyodide = await loadPyodideRuntime();
+    const pyodide = await loadPyodideRuntime() as {
+      globals: { set: (key: string, value: string) => void };
+      runPythonAsync: (code: string) => Promise<string>;
+    };
 
     // Set the input value in the Python environment
     pyodide.globals.set('input', input);
@@ -55,10 +58,10 @@ sys.stderr = captured_error = StringIO()
 try:
     # Set stdin
     sys.stdin = StringIO(input)
-    
+
     # Run the user code
 ${indentCode(userCode)}
-    
+
     # Function-based solution: parse input as JSON and call the function
     lines = input.strip().split('\\n')
     args = [json.loads(line) for line in lines if line.strip()]
@@ -84,11 +87,11 @@ finally:
     // Get the captured output and error
     const output = await pyodide.runPythonAsync('output');
     const errorOutput = await pyodide.runPythonAsync('error_output');
-    
+
     if (errorOutput) {
       return { output: '', error: errorOutput };
     }
-    
+
     return { output, error: null };
   } catch (error) {
     // Catch any pyodide-level errors (e.g., runtime not loaded)
