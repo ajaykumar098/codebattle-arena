@@ -5,13 +5,15 @@ interface CodeEditorProps {
   language?: string;
   onChange: (value: string) => void;
   height?: string;
+  options?: Record<string, unknown>;
 }
 
 export default function CodeEditor({
   value,
   language = 'python',
   onChange,
-  height = '400px'
+  height = '400px',
+  options
 }: CodeEditorProps) {
   return (
     <Editor
@@ -23,7 +25,8 @@ export default function CodeEditor({
       options={{
         fontSize: 14,
         minimap: { enabled: false },
-        scrollBeyondLastLine: false
+        scrollBeyondLastLine: false,
+        ...options
       }}
     />
   );

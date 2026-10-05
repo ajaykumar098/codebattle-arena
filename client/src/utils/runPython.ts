@@ -32,14 +32,13 @@ export async function runPythonTestCase(
   input: string
 ): Promise<{ output: string; error: string | null }> {
   try {
-    const pyodide = await loadPyodideRuntime() as {
-      globals: { set: (key: string, value: string) => void };
-      runPythonAsync: (code: string) => Promise<string>;
-    };
+    const pyodide = await loadPyodideRuntime();
 
     // Set the input value in the Python environment
-    pyodide.globals.set('input', input);
-    pyodide.globals.set('functionName', functionName);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pyodide as any).globals.set('input', input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pyodide as any).globals.set('functionName', functionName);
 
     // Build the Python wrapper script with error handling
     const pythonScript = `
@@ -82,11 +81,14 @@ finally:
 `;
 
     // Run the Python code
-    await pyodide.runPythonAsync(pythonScript);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (pyodide as any).runPythonAsync(pythonScript);
 
     // Get the captured output and error
-    const output = await pyodide.runPythonAsync('output');
-    const errorOutput = await pyodide.runPythonAsync('error_output');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const output = await (pyodide as any).runPythonAsync('output');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorOutput = await (pyodide as any).runPythonAsync('error_output');
 
     if (errorOutput) {
       return { output: '', error: errorOutput };
