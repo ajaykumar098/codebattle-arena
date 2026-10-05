@@ -59,6 +59,7 @@ export default function ProblemDetail() {
   const [pyodideLoading, setPyodideLoading] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [activeTab, setActiveTab] = useState('problem');
+  const [consoleOpen, setConsoleOpen] = useState(false);
 
   useEffect(() => {
     const loadProblem = async () => {
@@ -145,6 +146,7 @@ export default function ProblemDetail() {
       setResult({ totalTests, passedTests, allPassed, xpAwarded });
       setSubmitError(lastError);
       setActiveTab('output');
+      setConsoleOpen(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
@@ -261,21 +263,21 @@ export default function ProblemDetail() {
   );
 
   const CodePanel = () => (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex items-center justify-between mb-4 shrink-0">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Your Solution</h2>
         <Badge variant="accent">Python Only</Badge>
       </div>
-      <div className="border border-[#6b7280] rounded-[var(--radius-lg)] overflow-hidden">
+      <div className="flex-1 min-h-0 border border-[#6b7280] rounded-[var(--radius-lg)] overflow-hidden">
         <CodeEditor
           value={code}
           onChange={setCode}
           language="python"
-          height="calc(100dvh - 200px)"
+          height="100%"
           options={{ automaticLayout: true }}
         />
       </div>
-      <p className="text-xs text-[#a1a1aa]">
+      <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
         Write your solution as a function — e.g., def twoSum(nums, target): ...
         <br />
         <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
@@ -327,8 +329,8 @@ export default function ProblemDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Desktop/Tablet: Split layout */}
-      <div className="hidden md:block h-[calc(100dvh-64px)]">
+      {/* Large desktop (>=1440px): 3-column split */}
+      <div className="hidden xl:block h-[calc(100dvh-64px)]">
         <div className="grid grid-cols-12 h-full">
           {/* Problem panel */}
           <div className="col-span-4 border-r border-[#6b7280] p-6 overflow-y-auto">
@@ -336,7 +338,7 @@ export default function ProblemDetail() {
           </div>
 
           {/* Editor panel */}
-          <div className="col-span-5 p-6">
+          <div className="col-span-5 p-6 min-h-0">
             {CodePanel()}
           </div>
 
@@ -345,7 +347,56 @@ export default function ProblemDetail() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Results</h2>
             </div>
-            {OutputPanel()}
+            <div aria-live="polite">
+              {OutputPanel()}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop/Tablet (768px-1439px): Console-below layout */}
+      <div className="hidden md:block xl:hidden h-[calc(100dvh-64px)]">
+        <div className="grid grid-cols-12 h-full">
+          {/* Problem panel */}
+          <div className="col-span-5 border-r border-[#6b7280] p-6 overflow-y-auto">
+            {ProblemPanel()}
+          </div>
+
+          {/* Editor + Console panel */}
+          <div className="col-span-7 flex flex-col min-h-0">
+            <div className="flex-1 min-h-0 p-6">
+              {CodePanel()}
+            </div>
+
+            {/* Collapsible console */}
+            {consoleOpen && (
+              <div className="border-t border-[#6b7280] p-6" style={{ height: '35%' }}>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Results</h2>
+                  <button
+                    onClick={() => setConsoleOpen(false)}
+                    className="text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none"
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100% - 40px)' }} aria-live="polite">
+                  {OutputPanel()}
+                </div>
+              </div>
+            )}
+
+            {/* Console toggle bar */}
+            {!consoleOpen && (
+              <div className="border-t border-[#6b7280] p-2">
+                <button
+                  onClick={() => setConsoleOpen(true)}
+                  className="w-full text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none font-mono"
+                >
+                  ▼ Results Console
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -391,23 +442,42 @@ export default function ProblemDetail() {
           </button>
         </div>
 
-        {activeTab === 'problem' && (
-          <div className="p-4 overflow-y-auto" role="tabpanel">
-            {ProblemPanel()}
-          </div>
-        )}
+        <div className="h-[calc(100dvh-140px)]">
+          {activeTab === 'problem' && (
+            <div className="p-4 overflow-y-auto h-full" role="tabpanel">
+              {ProblemPanel()}
+            </div>
+          )}
 
-        {activeTab === 'code' && (
-          <div className="p-4 h-full" role="tabpanel">
-            {CodePanel()}
-          </div>
-        )}
+          {activeTab === 'code' && (
+            <div className="p-4 h-full flex flex-col min-h-0" role="tabpanel">
+              <div className="flex items-center justify-between mb-4 shrink-0">
+                <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Your Solution</h2>
+                <Badge variant="accent">Python Only</Badge>
+              </div>
+              <div className="flex-1 min-h-0 border border-[#6b7280] rounded-[var(--radius-lg)] overflow-hidden" style={{ height: 'calc(100dvh - 200px)' }}>
+                <CodeEditor
+                  value={code}
+                  onChange={setCode}
+                  language="python"
+                  height="100%"
+                  options={{ automaticLayout: true }}
+                />
+              </div>
+              <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
+                Write your solution as a function — e.g., def twoSum(nums, target): ...
+                <br />
+                <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
+              </p>
+            </div>
+          )}
 
-        {activeTab === 'output' && (
-          <div className="p-4" role="tabpanel">
-            {OutputPanel()}
-          </div>
-        )}
+          {activeTab === 'output' && (
+            <div className="p-4 h-full overflow-y-auto" role="tabpanel" aria-live="polite">
+              {OutputPanel()}
+            </div>
+          )}
+        </div>
 
         {/* Sticky bottom bar */}
         <div className="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#6b7280] p-4 flex gap-2" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
