@@ -31,7 +31,7 @@ function Navbar() {
 
   return (
     <header className="border-b border-[#6b7280] bg-[#0a0a0a]">
-      <div className="mx-auto flex max-w-[1280px] items-center justify-between px-4 py-4 md:px-8">
+     <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <NavLink
           to="/"
           className="text-sm font-bold uppercase tracking-wider text-[#e5e5e5] hover:text-[#f59e0b] font-mono"

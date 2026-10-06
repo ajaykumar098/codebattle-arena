@@ -291,19 +291,21 @@ export default function ProblemDetail() {
           options={{ automaticLayout: true }}
         />
       </div>
-      <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
-        Submit records your solution.
-        <br />
-        <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
-      </p>
-      <Button
-        onClick={handleSubmit}
-        disabled={submitting || pyodideLoading}
-        loading={submitting || pyodideLoading}
-        className="mt-4 shrink-0"
-      >
-        {pyodideLoading ? 'Loading Python...' : submitting ? 'Submitting...' : 'Submit Solution'}
-      </Button>
+      <div className="mt-3 flex shrink-0 items-start justify-between gap-4">
+        <p className="text-xs text-[#a1a1aa]">
+          Submit records your solution.
+          <br />
+          <span className="text-[#a1a1aa]">Tip: Press Esc then Tab to exit the editor</span>
+        </p>
+        <Button
+          onClick={handleSubmit}
+          disabled={submitting || pyodideLoading}
+          loading={submitting || pyodideLoading}
+          className="shrink-0"
+        >
+          {pyodideLoading ? 'Loading Python...' : submitting ? 'Submitting...' : 'Submit Solution'}
+        </Button>
+      </div>
     </div>
   );
 
@@ -350,7 +352,7 @@ export default function ProblemDetail() {
   );
 
   return (
-    <div className="bg-[#0a0a0a] h-[calc(100dvh-64px)] overflow-hidden">
+    <div className="bg-[#0a0a0a] h-[calc(100dvh-65px)] overflow-hidden">
       {/* Visually-hidden aria-live region for screen readers */}
       <div className="sr-only" aria-live="polite" role="status">
         {getAnnouncement()}
@@ -358,9 +360,9 @@ export default function ProblemDetail() {
 
       {/* Desktop/Tablet (>=768px): Console-below layout */}
       <div className="hidden md:block h-full">
-        <div className="grid grid-cols-12 h-full">
+        <div className="grid h-full grid-cols-12 grid-rows-[minmax(0,1fr)]">
           {/* Problem panel */}
-          <div className="col-span-5 border-r border-[#6b7280] p-6 overflow-y-auto">
+          <div className="col-span-5 min-h-0 overflow-y-auto border-r border-[#6b7280] p-6">
             {ProblemPanel()}
           </div>
 
@@ -478,7 +480,7 @@ export default function ProblemDetail() {
               <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
                 Submit records your solution.
                 <br />
-                <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
+                <span className="text-[#a1a1aa]">Tip: Press Esc then Tab to exit the editor</span>
               </p>
             </div>
           )}
