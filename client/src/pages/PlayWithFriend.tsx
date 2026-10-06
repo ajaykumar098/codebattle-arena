@@ -1,7 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { Trophy, Handshake, X } from 'lucide-react';
 import CodeEditor from '../components/CodeEditor';
 import { runPythonTestCase } from '../utils/runPython';
+import Button from '../components/ui/Button';
+import Input from '../components/ui/Input';
+import Card from '../components/ui/Card';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000';
 
@@ -310,28 +314,29 @@ export default function PlayWithFriend() {
 
   if (screen === 'lobby') {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
+      <div className="min-h-screen bg-[#0a0a0a] px-4 py-10 md:px-8">
         <div className="mx-auto max-w-lg">
-          <p className="text-center text-sm font-medium uppercase tracking-wide text-indigo-400">
-            CodeBattle Arena
-          </p>
-          <h1 className="mt-2 text-center text-4xl font-bold text-slate-50">
-            Challenge a Friend
-          </h1>
-          <p className="mt-3 text-center text-slate-400">
-            Challenge a friend to a real-time coding battle
-          </p>
+          <div className="mb-8">
+            <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">CodeBattle Arena</p>
+            <h1 className="mt-2 text-[clamp(2rem,6vw,3rem)] font-semibold text-[#e5e5e5] font-mono">Challenge a Friend</h1>
+          </div>
+
+          <Card className="mb-6">
+            <p className="text-sm text-[#a1a1aa] leading-relaxed">
+              Challenge a friend to a real-time coding battle. Create a room or join with a code.
+            </p>
+          </Card>
 
           {/* Mode toggle */}
-          <div className="mt-8 flex rounded-xl border border-slate-800 bg-slate-900 p-1">
+          <div className="mb-6 flex border border-[#6b7280] rounded-[var(--radius-lg)]">
             {(['create', 'join'] as const).map((m) => (
               <button
                 key={m}
                 onClick={() => { setMode(m); setError(''); }}
-                className={`flex-1 rounded-lg py-2.5 text-sm font-semibold transition-all ${
+                className={`flex-1 py-3 text-sm font-medium transition-colors ${
                   mode === m
-                    ? 'bg-indigo-500 text-white shadow'
-                    : 'text-slate-400 hover:text-slate-200'
+                    ? 'bg-[#121212] text-[#e5e5e5] border-r border-[#6b7280]'
+                    : 'text-[#a1a1aa] hover:text-[#e5e5e5]'
                 }`}
               >
                 {m === 'create' ? 'Create Room' : 'Join Room'}
@@ -340,10 +345,9 @@ export default function PlayWithFriend() {
           </div>
 
           {mode === 'create' ? (
-            <div className="mt-6 space-y-5 rounded-xl border border-slate-800 bg-slate-900 p-6">
-              {/* Timer */}
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">
+            <Card>
+              <div className="mb-6">
+                <label className="mb-2 block text-sm text-[#a1a1aa] font-mono">
                   Timer: {timerMinutes} minutes
                 </label>
                 <input
@@ -353,58 +357,57 @@ export default function PlayWithFriend() {
                   step={5}
                   value={timerMinutes}
                   onChange={(e) => setTimerMinutes(Number(e.target.value))}
-                  className="w-full accent-indigo-500"
+                  className="w-full accent-[#f59e0b]"
                 />
-                <div className="mt-1 flex justify-between text-xs text-slate-500">
+                <div className="mt-1 flex justify-between text-xs text-[#6b7280]">
                   <span>5 min</span>
                   <span>60 min</span>
                 </div>
               </div>
 
               {error && (
-                <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">
+                <div className="mb-6 bg-[#f43f5e]/10 border border-[#f43f5e]/30 p-4 text-sm text-[#f43f5e] rounded-[var(--radius-lg)]" role="alert">
                   {error}
-                </p>
+                </div>
               )}
 
-              <button
+              <Button
                 onClick={handleCreateRoom}
                 disabled={loading}
-                className="w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 disabled:opacity-50"
+                loading={loading}
+                className="w-full"
               >
                 {loading ? 'Creating room...' : 'Create Room'}
-              </button>
-            </div>
+              </Button>
+            </Card>
           ) : (
-            <div className="mt-6 space-y-4 rounded-xl border border-slate-800 bg-slate-900 p-6">
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-400">
-                  Room Code
-                </label>
-                <input
-                  type="text"
+            <Card>
+              <div className="mb-6">
+                <Input
+                  label="Room Code"
                   placeholder="Enter 8-character code"
                   value={joinCode}
                   onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                   maxLength={8}
-                  className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 text-center font-mono text-lg tracking-widest text-slate-100 outline-none focus:border-indigo-500"
+                  className="font-mono text-center tracking-widest"
                 />
               </div>
 
               {error && (
-                <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">
+                <div className="mb-6 bg-[#f43f5e]/10 border border-[#f43f5e]/30 p-4 text-sm text-[#f43f5e] rounded-[var(--radius-lg)]" role="alert">
                   {error}
-                </p>
+                </div>
               )}
 
-              <button
+              <Button
                 onClick={handleJoinRoom}
                 disabled={loading || joinCode.length !== 8}
-                className="w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-400 disabled:opacity-50"
+                loading={loading}
+                className="w-full"
               >
                 {loading ? 'Joining...' : 'Join Room'}
-              </button>
-            </div>
+              </Button>
+            </Card>
           )}
         </div>
       </div>
@@ -413,77 +416,79 @@ export default function PlayWithFriend() {
 
   if (screen === 'waiting') {
     return (
-      <div className="min-h-screen bg-slate-950 px-4 py-16 text-slate-100">
-        <div className="mx-auto max-w-lg text-center">
-          <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">
-            CodeBattle Arena
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-slate-50">Battle Lobby</h1>
+      <div className="min-h-screen bg-[#0a0a0a] px-4 py-10 md:px-8">
+        <div className="mx-auto max-w-lg">
+          <div className="mb-8">
+            <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">CodeBattle Arena</p>
+            <h1 className="mt-2 text-[clamp(2rem,6vw,3rem)] font-semibold text-[#e5e5e5] font-mono">Battle Lobby</h1>
+          </div>
 
-          <div className="mt-8 rounded-xl border border-slate-800 bg-slate-900 p-8">
-            <p className="text-sm text-slate-400">Room Code</p>
-            <p className="mt-2 font-mono text-4xl font-bold tracking-widest text-indigo-300">
-              {room?.code}
-            </p>
-            <p className="mt-3 text-xs text-slate-500">Share this code with your friend</p>
+          <Card>
+            <div className="mb-6">
+              <p className="text-sm text-[#a1a1aa] font-mono mb-2">Room Code</p>
+              <p className="font-mono text-4xl font-bold tracking-widest text-[#f59e0b]">
+                {room?.code}
+              </p>
+              <p className="mt-2 text-xs text-[#6b7280]">Share this code with your friend</p>
+            </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-                <p className="text-slate-400">Language</p>
-                <p className="font-semibold text-slate-100">
+            <div className="mb-6 grid grid-cols-2 gap-3 text-sm">
+              <div className="border border-[#6b7280] bg-[#121212] p-3 rounded-[var(--radius-md)]">
+                <p className="text-[#a1a1aa]">Language</p>
+                <p className="font-semibold text-[#e5e5e5]">
                   {LANGUAGE_LABELS[room?.language || ''] || room?.language}
                 </p>
               </div>
-              <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-3">
-                <p className="text-slate-400">Timer</p>
-                <p className="font-semibold text-slate-100">{room?.timerMinutes} minutes</p>
+              <div className="border border-[#6b7280] bg-[#121212] p-3 rounded-[var(--radius-md)]">
+                <p className="text-[#a1a1aa]">Timer</p>
+                <p className="font-semibold text-[#e5e5e5]">{room?.timerMinutes} minutes</p>
               </div>
             </div>
 
-            <div className="mt-6 space-y-3">
-              <div className="flex items-center gap-3 rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3">
-                <div className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-                <span className="text-sm text-slate-200">{room?.hostUsername} (Host)</span>
+            <div className="mb-6 space-y-3">
+              <div className="flex items-center gap-3 border border-[#10b981]/20 bg-[#10b981]/5 p-3 rounded-[var(--radius-md)]">
+                <div className="h-2.5 w-2.5 rounded-full bg-[#10b981]" />
+                <span className="text-sm text-[#e5e5e5]">{room?.hostUsername} (Host)</span>
               </div>
-              <div className={`flex items-center gap-3 rounded-lg border p-3 ${
+              <div className={`flex items-center gap-3 border p-3 rounded-[var(--radius-md)] ${
                 room?.guestUsername
-                  ? 'border-emerald-500/20 bg-emerald-500/5'
-                  : 'border-slate-700 bg-slate-800/30'
+                  ? 'border-[#10b981]/20 bg-[#10b981]/5'
+                  : 'border-[#6b7280] bg-[#121212]'
               }`}>
                 <div className={`h-2.5 w-2.5 rounded-full ${
-                  room?.guestUsername ? 'bg-emerald-400' : 'animate-pulse bg-slate-600'
+                  room?.guestUsername ? 'bg-[#10b981]' : 'animate-pulse bg-[#6b7280]'
                 }`} />
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-[#a1a1aa]">
                   {room?.guestUsername || 'Waiting for opponent...'}
                 </span>
               </div>
             </div>
 
             {opponentStatus && (
-              <p className="mt-4 text-sm text-indigo-300">{opponentStatus}</p>
+              <p className="mb-6 text-sm text-[#f59e0b]">{opponentStatus}</p>
             )}
 
             {error && (
-              <p className="mt-4 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300">
+              <div className="mb-6 bg-[#f43f5e]/10 border border-[#f43f5e]/30 p-4 text-sm text-[#f43f5e] rounded-[var(--radius-lg)]" role="alert">
                 {error}
-              </p>
+              </div>
             )}
 
             {isHost && room?.guestUsername && (
-              <button
+              <Button
                 onClick={handleStartBattle}
-                className="mt-6 w-full rounded-xl bg-emerald-500 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+                className="w-full"
               >
                 Start Battle!
-              </button>
+              </Button>
             )}
 
             {!isHost && (
-              <p className="mt-6 text-sm text-slate-400">
+              <p className="text-sm text-[#a1a1aa]">
                 Waiting for host to start the battle...
               </p>
             )}
-          </div>
+          </Card>
         </div>
       </div>
     );
@@ -491,12 +496,10 @@ export default function PlayWithFriend() {
 
   if (screen === 'countdown') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a]">
         <div className="text-center">
-          <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">
-            Get Ready
-          </p>
-          <div className="mt-4 text-9xl font-bold text-slate-50 tabular-nums">
+          <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">Get Ready</p>
+          <div className="mt-4 text-[clamp(4rem,20vw,9rem)] font-bold text-[#e5e5e5] font-mono tabular-nums motion-reduce:animate-none animate-pulse">
             {countdownCount}
           </div>
         </div>
@@ -642,48 +645,73 @@ export default function PlayWithFriend() {
     );
   }
 
+  // Persistent aria-live announcements for screen readers
+  const getAnnouncement = () => {
+    if (opponentStatus) return opponentStatus;
+    if (battleResult) {
+      if (!battleResult.winner) return `Battle ended in a draw. ${battleResult.reason}`;
+      const myId = userId;
+      const iWon = battleResult.winner === myId;
+      if (iWon) return `You won the battle. ${battleResult.reason}`;
+      return `${battleResult.winnerUsername} won the battle. ${battleResult.reason}`;
+    }
+    if (error) return error;
+    return '';
+  };
+
   if (screen === 'result') {
     const myId = userId;
     const iWon = battleResult?.winner === myId;
     const isDraw = !battleResult?.winner;
 
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-        <div className="w-full max-w-md text-center">
-          <div className={`rounded-2xl border p-8 ${
+      <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] px-4">
+        {/* Visually-hidden aria-live region */}
+        <div className="sr-only" aria-live="polite" role="status">
+          {getAnnouncement()}
+        </div>
+
+        <div className="w-full max-w-md">
+          <Card className={`${
             isDraw
-              ? 'border-slate-700 bg-slate-900'
+              ? 'border-[#6b7280]'
               : iWon
-              ? 'border-emerald-500/30 bg-emerald-500/5'
-              : 'border-rose-500/30 bg-rose-500/5'
+              ? 'border-[#10b981]'
+              : 'border-[#f43f5e]'
           }`}>
-            <div className="text-5xl">
-              {isDraw ? '🤝' : iWon ? '🏆' : '😔'}
+            <div className="flex justify-center mb-6">
+              {isDraw ? (
+                <Handshake className="h-16 w-16 text-[#a1a1aa]" />
+              ) : iWon ? (
+                <Trophy className="h-16 w-16 text-[#10b981]" />
+              ) : (
+                <X className="h-16 w-16 text-[#f43f5e]" />
+              )}
             </div>
-            <h1 className={`mt-4 text-3xl font-bold ${
-              isDraw ? 'text-slate-200' : iWon ? 'text-emerald-300' : 'text-rose-300'
-            }`}>
+            <h1 className={`text-center text-2xl font-semibold ${
+              isDraw ? 'text-[#e5e5e5]' : iWon ? 'text-[#10b981]' : 'text-[#f43f5e]'
+            } font-mono`}>
               {isDraw ? 'Draw!' : iWon ? 'You Won!' : 'You Lost'}
             </h1>
             {battleResult?.winnerUsername && !isDraw && (
-              <p className="mt-2 text-slate-400">
+              <p className="mt-2 text-center text-sm text-[#a1a1aa]">
                 {iWon ? 'Congratulations!' : `${battleResult.winnerUsername} won`}
               </p>
             )}
-            <p className="mt-1 text-sm text-slate-500">{battleResult?.reason}</p>
+            <p className="mt-1 text-center text-sm text-[#6b7280]">{battleResult?.reason}</p>
 
             {/* Submission breakdown */}
             {battleResult?.submissions && room && (
-              <div className="mt-6 space-y-2 text-left">
+              <div className="mt-6 space-y-2">
                 {[
                   { id: room.hostId, username: room.hostUsername },
                   { id: room.guestId, username: room.guestUsername },
                 ].map((player) => {
                   const sub = battleResult.submissions[player.id || ''];
                   return (
-                    <div key={player.id} className="flex items-center justify-between rounded-lg border border-slate-700 bg-slate-800 px-4 py-3">
-                      <span className="text-sm font-medium text-slate-200">{player.username}</span>
-                      <span className="text-sm text-slate-400">
+                    <div key={player.id} className="flex items-center justify-between border border-[#6b7280] bg-[#121212] px-4 py-3 rounded-[var(--radius-md)]">
+                      <span className="text-sm font-medium text-[#e5e5e5]">{player.username}</span>
+                      <span className="text-sm text-[#a1a1aa]">
                         {sub ? `${sub.passedTests}/${sub.totalTests} tests` : 'No submission'}
                       </span>
                     </div>
@@ -692,7 +720,7 @@ export default function PlayWithFriend() {
               </div>
             )}
 
-            <button
+            <Button
               onClick={() => {
                 setScreen('lobby');
                 setRoom(null);
@@ -702,11 +730,11 @@ export default function PlayWithFriend() {
                 setError('');
                 setCode('');
               }}
-              className="mt-6 w-full rounded-xl bg-indigo-500 py-3 text-sm font-semibold text-white hover:bg-indigo-400"
+              className="mt-6 w-full"
             >
               Play Again
-            </button>
-          </div>
+            </Button>
+          </Card>
         </div>
       </div>
     );
