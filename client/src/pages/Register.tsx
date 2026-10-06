@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
@@ -50,74 +52,71 @@ function Register() {
   };
 
   return (
-    <main className="min-h-screen bg-slate-950 px-4 py-10 text-slate-100 flex items-center justify-center">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-8 shadow-xl">
-        <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">CodeBattle Arena</p>
-        <h1 className="mt-2 text-2xl font-bold">Create Account</h1>
+    <main className="min-h-screen flex items-center justify-center px-4 bg-[#0a0a0a]">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">CodeBattle Arena</p>
+          <h1 className="mt-2 text-[clamp(2rem,6vw,3rem)] font-semibold text-[#e5e5e5] font-mono">Create Account</h1>
+        </div>
 
-        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          <input
-            name="fullName"
-            placeholder="Full Name"
-            value={form.fullName}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            required
-          />
-          <input
-            name="username"
-            placeholder="Username"
-            value={form.username}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            required
-          />
-          <input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            required
-          />
-          <input
-            name="password"
-            type="password"
-            placeholder="Password"
-            value={form.password}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            required
-          />
-          <p className="text-xs text-slate-500">
-            Password must be at least 6 characters and include uppercase, lowercase, a number, and a special character.
-          </p>
-          <input
-            name="confirmPassword"
-            type="password"
-            placeholder="Confirm Password"
-            value={form.confirmPassword}
-            onChange={handleChange}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2 text-sm outline-none focus:border-indigo-500"
-            required
-          />
+        <div className="bg-[#121212] border border-[#6b7280] rounded-[var(--radius-lg)] p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input
+              name="fullName"
+              label="Full Name"
+              value={form.fullName}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              name="username"
+              label="Username"
+              value={form.username}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              name="email"
+              type="email"
+              label="Email"
+              value={form.email}
+              onChange={handleChange}
+              required
+            />
+            <Input
+              name="password"
+              type="password"
+              label="Password"
+              value={form.password}
+              onChange={handleChange}
+              hint="At least 6 characters with uppercase, lowercase, number, and special character"
+              required
+            />
+            <Input
+              name="confirmPassword"
+              type="password"
+              label="Confirm Password"
+              value={form.confirmPassword}
+              onChange={handleChange}
+              required
+            />
 
-          {error && <p className="text-sm text-red-300">{error}</p>}
-          {success && <p className="text-sm text-emerald-300">{success}</p>}
+            {error && (
+              <p className="text-sm text-[#f43f5e]" role="alert">{error}</p>
+            )}
+            {success && (
+              <p className="text-sm text-[#10b981]" role="status">{success}</p>
+            )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-indigo-500 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-400 disabled:opacity-50"
-          >
-            {loading ? "Creating account..." : "Register"}
-          </button>
-        </form>
+            <Button type="submit" loading={loading} className="w-full">
+              {loading ? "Creating account..." : "Register"}
+            </Button>
+          </form>
+        </div>
 
-        <p className="mt-4 text-sm text-slate-400">
+        <p className="mt-6 text-center text-sm text-[#a1a1aa]">
           Already have an account?{" "}
-          <Link to="/login" className="text-indigo-400 hover:underline">
+          <Link to="/login" className="text-[#f59e0b] hover:underline">
             Login
           </Link>
         </p>

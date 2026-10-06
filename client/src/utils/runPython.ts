@@ -1,18 +1,18 @@
 declare global {
   interface Window {
-    pyodide: any;
-    loadPyodide: () => Promise<any>;
+    pyodide: unknown;
+    loadPyodide: () => Promise<unknown>;
   }
 }
 
-let pyodideInstance: any = null;
+let pyodideInstance: unknown = null;
 
 function indentCode(code: string, spaces: number = 4): string {
   const indent = ' '.repeat(spaces);
   return code.split('\n').map(line => indent + line).join('\n');
 }
 
-export async function loadPyodideRuntime(): Promise<any> {
+export async function loadPyodideRuntime(): Promise<unknown> {
   if (window.pyodide) {
     return window.pyodide;
   }
@@ -35,8 +35,10 @@ export async function runPythonTestCase(
     const pyodide = await loadPyodideRuntime();
 
     // Set the input value in the Python environment
-    pyodide.globals.set('input', input);
-    pyodide.globals.set('functionName', functionName);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pyodide as any).globals.set('input', input);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (pyodide as any).globals.set('functionName', functionName);
 
     // Build the Python wrapper script with error handling
     const pythonScript = `
@@ -55,10 +57,10 @@ sys.stderr = captured_error = StringIO()
 try:
     # Set stdin
     sys.stdin = StringIO(input)
-    
+
     # Run the user code
 ${indentCode(userCode)}
-    
+
     # Function-based solution: parse input as JSON and call the function
     lines = input.strip().split('\\n')
     args = [json.loads(line) for line in lines if line.strip()]
@@ -79,16 +81,19 @@ finally:
 `;
 
     // Run the Python code
-    await pyodide.runPythonAsync(pythonScript);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (pyodide as any).runPythonAsync(pythonScript);
 
     // Get the captured output and error
-    const output = await pyodide.runPythonAsync('output');
-    const errorOutput = await pyodide.runPythonAsync('error_output');
-    
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const output = await (pyodide as any).runPythonAsync('output');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const errorOutput = await (pyodide as any).runPythonAsync('error_output');
+
     if (errorOutput) {
       return { output: '', error: errorOutput };
     }
-    
+
     return { output, error: null };
   } catch (error) {
     // Catch any pyodide-level errors (e.g., runtime not loaded)

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { Menu, X } from "lucide-react";
+import ConnectionIndicator from "./ui/ConnectionIndicator";
 
-// NOTE: "/" and "/play" don't exist as real pages yet (per current App.tsx).
-// Home will need a route once built; "Play with Friend" links to "/play"
-// as a placeholder for when that route exists.
 const NAV_LINKS = [
-  { label: "Home", to: "/" },
+  { label: "Problems", to: "/" },
   { label: "Dashboard", to: "/dashboard" },
   { label: "Daily Challenge", to: "/coding" },
   { label: "Challenge a Friend", to: "/play" },
@@ -24,43 +23,44 @@ function Navbar() {
   };
 
   const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    `rounded-lg px-3 py-2 text-sm font-medium transition-all ${
+    `px-3 py-2 text-sm font-medium transition-colors ${
       isActive
-        ? "bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg shadow-indigo-500/50 border-b-2 border-indigo-400"
-        : "text-slate-400 hover:text-white"
+        ? "text-[#f59e0b]"
+        : "text-[#a1a1aa] hover:text-[#e5e5e5]"
     }`;
 
   return (
-    <nav className="border-b border-indigo-500/30 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 backdrop-blur supports-[backdrop-filter]:bg-slate-950/60">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+    <header className="border-b border-[#6b7280] bg-[#0a0a0a]">
+     <div className="flex h-16 items-center justify-between px-4 md:px-6">
         <NavLink
           to="/"
-          className="text-sm font-bold uppercase tracking-wide text-indigo-400 hover:text-indigo-300"
+          className="text-sm font-bold uppercase tracking-wider text-[#e5e5e5] hover:text-[#f59e0b] font-mono"
         >
           CodeBattle Arena
         </NavLink>
 
         {/* Desktop links */}
-        <div className="hidden items-center gap-1 sm:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Main navigation">
           {NAV_LINKS.map((link) => (
             <NavLink key={link.to} to={link.to} className={linkClasses}>
               {link.label}
             </NavLink>
           ))}
-        </div>
+        </nav>
 
-        <div className="hidden sm:block">
+        <div className="hidden items-center gap-4 md:flex">
+          <ConnectionIndicator />
           {token ? (
             <button
               onClick={handleLogout}
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+              className="px-4 py-2 text-sm font-medium text-[#e5e5e5] hover:text-[#f59e0b] transition-colors"
             >
               Logout
             </button>
           ) : (
             <NavLink
               to="/login"
-              className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
+              className="px-4 py-2 text-sm font-medium text-[#e5e5e5] hover:text-[#f59e0b] transition-colors"
             >
               Login
             </NavLink>
@@ -72,54 +72,49 @@ function Navbar() {
           onClick={() => setMenuOpen((open) => !open)}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           aria-expanded={menuOpen}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-slate-700 text-slate-200 hover:bg-slate-800 sm:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-[var(--radius-md)] border border-[#6b7280] text-[#e5e5e5] hover:bg-[#121212] md:hidden"
         >
-          {menuOpen ? (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-5 w-5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          )}
+          {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
-      {/* Mobile slide-down menu */}
+      {/* Mobile drawer */}
       {menuOpen && (
-        <div className="border-t border-slate-800 bg-slate-950 sm:hidden">
-          <div className="flex flex-col gap-1 px-4 py-3">
+        <div className="border-t border-[#6b7280] bg-[#0a0a0a] md:hidden">
+          <nav className="flex flex-col gap-1 px-4 py-4" aria-label="Mobile navigation">
             {NAV_LINKS.map((link) => (
               <NavLink
                 key={link.to}
                 to={link.to}
                 onClick={() => setMenuOpen(false)}
-                className={linkClasses}
+                className="px-3 py-3 text-sm font-medium text-[#a1a1aa] hover:text-[#e5e5e5] hover:bg-[#121212] rounded-[var(--radius-md)] transition-colors"
               >
                 {link.label}
               </NavLink>
             ))}
-            {token ? (
-              <button
-                onClick={handleLogout}
-                className="mt-1 rounded-lg border border-slate-700 px-3 py-2 text-left text-sm font-medium text-slate-200 hover:bg-slate-800"
-              >
-                Logout
-              </button>
-            ) : (
-              <NavLink
-                to="/login"
-                onClick={() => setMenuOpen(false)}
-                className="mt-1 rounded-lg border border-slate-700 px-3 py-2 text-sm font-medium text-slate-200 hover:bg-slate-800"
-              >
-                Login
-              </NavLink>
-            )}
-          </div>
+            <div className="flex items-center justify-between px-3 py-3 border-t border-[#6b7280] mt-2">
+              <ConnectionIndicator />
+              {token ? (
+                <button
+                  onClick={handleLogout}
+                  className="text-sm font-medium text-[#e5e5e5] hover:text-[#f59e0b] transition-colors"
+                >
+                  Logout
+                </button>
+              ) : (
+                <NavLink
+                  to="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="text-sm font-medium text-[#e5e5e5] hover:text-[#f59e0b] transition-colors"
+                >
+                  Login
+                </NavLink>
+              )}
+            </div>
+          </nav>
         </div>
       )}
-    </nav>
+    </header>
   );
 }
 

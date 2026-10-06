@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Card from '../components/ui/Card';
+import Badge from '../components/ui/Badge';
 
 interface Problem {
   _id: string;
@@ -8,18 +10,6 @@ interface Problem {
   difficulty: 'Easy' | 'Medium' | 'Hard';
   tags: string[];
 }
-
-const difficultyStyles: Record<string, string> = {
-  Easy: 'text-emerald-300 bg-emerald-500/10 border-emerald-500/30',
-  Medium: 'text-amber-300 bg-amber-500/10 border-amber-500/30',
-  Hard: 'text-rose-300 bg-rose-500/10 border-rose-500/30',
-};
-
-const difficultyGlow: Record<string, string> = {
-  Easy: 'hover:shadow-emerald-500/10',
-  Medium: 'hover:shadow-amber-500/10',
-  Hard: 'hover:shadow-rose-500/10',
-};
 
 export default function Problems() {
   const [problems, setProblems] = useState<Problem[]>([]);
@@ -39,12 +29,12 @@ export default function Problems() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 p-8">
+      <div className="min-h-screen p-8 bg-[#0a0a0a]">
         <div className="mx-auto max-w-4xl space-y-4">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="h-24 animate-pulse rounded-xl border border-slate-800 bg-slate-900/60"
+              className="h-24 bg-[#121212] border border-[#6b7280] rounded-[var(--radius-lg)]"
             />
           ))}
         </div>
@@ -54,8 +44,8 @@ export default function Problems() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-950 p-8">
-        <div className="mx-auto max-w-4xl rounded-xl border border-rose-500/30 bg-rose-500/10 p-6 text-rose-300">
+      <div className="min-h-screen p-8 bg-[#0a0a0a]">
+        <div className="mx-auto max-w-4xl bg-[#f43f5e]/10 border border-[#f43f5e]/30 p-6 text-[#f43f5e] rounded-[var(--radius-lg)]">
           Error: {error}
         </div>
       </div>
@@ -63,51 +53,44 @@ export default function Problems() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 px-4 py-10 sm:px-8">
+    <div className="min-h-screen px-4 py-10 bg-[#0a0a0a] md:px-8">
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
-          <p className="text-sm font-medium uppercase tracking-wide text-indigo-400">
-            CodeBattle Arena
-          </p>
-          <h1 className="mt-2 text-4xl font-bold text-slate-50">Problems</h1>
-          <p className="mt-2 text-slate-400">
+          <p className="text-sm font-medium uppercase tracking-wider text-[#f59e0b] font-mono">CodeBattle Arena</p>
+          <h1 className="mt-2 text-[clamp(2rem,6vw,3rem)] font-semibold text-[#e5e5e5] font-mono">Problems</h1>
+          <p className="mt-2 text-[#a1a1aa]">
             {problems.length} challenges ready to solve
           </p>
         </div>
 
-        <div className="space-y-4">
-          {problems.map((problem, index) => (
+        <div className="grid gap-4 md:grid-cols-2">
+          {problems.map((problem) => (
             <Link
               key={problem._id}
               to={`/problems/${problem.slug}`}
-              className="block animate-fade-in-up"
-              style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}
+              className="block"
             >
-              <div
-                className={`group rounded-xl border border-slate-800 bg-slate-900 p-5 shadow-lg shadow-black/20 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-500/40 hover:bg-slate-900/80 hover:shadow-xl ${difficultyGlow[problem.difficulty]}`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <h2 className="text-lg font-semibold text-slate-100 transition-colors group-hover:text-indigo-300">
+              <Card className="group transition-colors hover:bg-[#1a1a1a]">
+                <div className="flex items-start justify-between gap-4 mb-3">
+                  <h2 className="text-lg font-semibold text-[#e5e5e5] group-hover:text-[#f59e0b] transition-colors font-mono">
                     {problem.title}
                   </h2>
-                  <span
-                    className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${difficultyStyles[problem.difficulty]}`}
-                  >
+                  <Badge variant={problem.difficulty.toLowerCase() as "easy" | "medium" | "hard" | "success" | "error" | "neutral" | "accent"}>
                     {problem.difficulty}
-                  </span>
+                  </Badge>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                   {problem.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-md bg-slate-800 px-2 py-1 text-xs font-medium text-slate-400"
+                      className="text-xs text-[#a1a1aa] font-mono"
                     >
                       #{tag}
                     </span>
                   ))}
                 </div>
-              </div>
+              </Card>
             </Link>
           ))}
         </div>
