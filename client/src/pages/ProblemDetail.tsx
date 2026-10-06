@@ -278,7 +278,7 @@ export default function ProblemDetail() {
 
   const CodePanel = () => (
     <div className="flex flex-col h-full min-h-0">
-      <div className="flex items-center justify-between mb-4 shrink-0">
+      <div className="flex items-center justify-between mb-2 shrink-0">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Your Solution</h2>
         <Badge variant="accent">Python Only</Badge>
       </div>
@@ -292,10 +292,18 @@ export default function ProblemDetail() {
         />
       </div>
       <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
-        Write your solution as a function — e.g., def twoSum(nums, target): ...
+        Submit records your solution.
         <br />
         <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
       </p>
+      <Button
+        onClick={handleSubmit}
+        disabled={submitting || pyodideLoading}
+        loading={submitting || pyodideLoading}
+        className="mt-4 shrink-0"
+      >
+        {pyodideLoading ? 'Loading Python...' : submitting ? 'Submitting...' : 'Submit Solution'}
+      </Button>
     </div>
   );
 
@@ -342,14 +350,14 @@ export default function ProblemDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a]">
+    <div className="bg-[#0a0a0a] h-[calc(100dvh-64px)] overflow-hidden">
       {/* Visually-hidden aria-live region for screen readers */}
       <div className="sr-only" aria-live="polite" role="status">
         {getAnnouncement()}
       </div>
 
       {/* Desktop/Tablet (>=768px): Console-below layout */}
-      <div className="hidden md:block h-[calc(100dvh-64px)]">
+      <div className="hidden md:block h-full">
         <div className="grid grid-cols-12 h-full">
           {/* Problem panel */}
           <div className="col-span-5 border-r border-[#6b7280] p-6 overflow-y-auto">
@@ -364,7 +372,7 @@ export default function ProblemDetail() {
 
             {/* Collapsible console */}
             {consoleOpen && (
-              <div className="border-t border-[#6b7280] p-6" style={{ height: '35%' }} id="results-console">
+              <div className="border-t border-[#6b7280] p-6 shrink-0" style={{ height: '35%' }} id="results-console">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Results</h2>
                   <button
@@ -388,7 +396,7 @@ export default function ProblemDetail() {
 
             {/* Console toggle bar */}
             {!consoleOpen && (
-              <div className="border-t border-[#6b7280] p-2">
+              <div className="border-t border-[#6b7280] p-2 shrink-0">
                 <button
                   onClick={() => setConsoleOpen(true)}
                   className="w-full text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none font-mono flex items-center justify-center gap-1"
@@ -405,7 +413,7 @@ export default function ProblemDetail() {
       </div>
 
       {/* Mobile: Tab layout */}
-      <div className="md:hidden pb-20">
+      <div className="md:hidden pb-20 h-[calc(100dvh-120px)]">
         <div className="flex border-b border-[#6b7280] sticky top-0 bg-[#0a0a0a] z-10" role="tablist">
           <button
             onClick={() => setActiveTab('problem')}
@@ -445,7 +453,7 @@ export default function ProblemDetail() {
           </button>
         </div>
 
-        <div className="h-[calc(100dvh-140px)]">
+        <div className="h-full">
           {activeTab === 'problem' && (
             <div className="p-4 overflow-y-auto h-full" role="tabpanel">
               {ProblemPanel()}
@@ -454,11 +462,11 @@ export default function ProblemDetail() {
 
           {activeTab === 'code' && (
             <div className="p-4 h-full flex flex-col min-h-0" role="tabpanel">
-              <div className="flex items-center justify-between mb-4 shrink-0">
+              <div className="flex items-center justify-between mb-2 shrink-0">
                 <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Your Solution</h2>
                 <Badge variant="accent">Python Only</Badge>
               </div>
-              <div className="flex-1 min-h-0 border border-[#6b7280] rounded-[var(--radius-lg)] overflow-hidden" style={{ height: 'calc(100dvh - 200px)' }}>
+              <div className="flex-1 min-h-0 border border-[#6b7280] rounded-[var(--radius-lg)] overflow-hidden" style={{ height: 'calc(100dvh - 280px)' }}>
                 <CodeEditor
                   value={code}
                   onChange={setCode}
@@ -468,7 +476,7 @@ export default function ProblemDetail() {
                 />
               </div>
               <p className="mt-2 text-xs text-[#a1a1aa] shrink-0">
-                Write your solution as a function — e.g., def twoSum(nums, target): ...
+                Submit records your solution.
                 <br />
                 <span className="text-[#6b7280]">Tip: Press Esc then Tab to exit the editor</span>
               </p>
@@ -482,8 +490,8 @@ export default function ProblemDetail() {
           )}
         </div>
 
-        {/* Sticky bottom bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#6b7280] p-4 flex gap-2" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+        {/* Sticky bottom bar - mobile only */}
+        <div className="fixed bottom-0 left-0 right-0 bg-[#121212] border-t border-[#6b7280] p-4 flex gap-2 md:hidden" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
           {isInRun && !result && (
             <Button variant="secondary" onClick={goToNext} className="flex-1">
               Skip
@@ -495,7 +503,7 @@ export default function ProblemDetail() {
             loading={submitting || pyodideLoading}
             className="flex-1"
           >
-            {pyodideLoading ? 'Loading Python...' : 'Submit'}
+            {pyodideLoading ? 'Loading Python...' : submitting ? 'Submitting...' : 'Submit Solution'}
           </Button>
         </div>
       </div>
