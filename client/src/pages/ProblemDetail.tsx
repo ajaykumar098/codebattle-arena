@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
-import { Check, X } from 'lucide-react';
+import { Check, X, ChevronUp, ChevronDown } from 'lucide-react';
 import CodeEditor from '../components/CodeEditor';
 import { runPythonTestCase } from '../utils/runPython';
 import Badge from '../components/ui/Badge';
@@ -60,6 +60,7 @@ export default function ProblemDetail() {
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [activeTab, setActiveTab] = useState('problem');
   const [consoleOpen, setConsoleOpen] = useState(false);
+  const [userClosedConsole, setUserClosedConsole] = useState(false);
 
   useEffect(() => {
     const loadProblem = async () => {
@@ -146,13 +147,26 @@ export default function ProblemDetail() {
       setResult({ totalTests, passedTests, allPassed, xpAwarded });
       setSubmitError(lastError);
       setActiveTab('output');
-      setConsoleOpen(true);
+      if (!userClosedConsole) {
+        setConsoleOpen(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong');
     } finally {
       setSubmitting(false);
       setPyodideLoading(false);
     }
+  };
+
+  const getAnnouncement = () => {
+    if (!result) return '';
+    if (result.allPassed && !submitError) {
+      return `Accepted, ${result.passedTests} of ${result.totalTests} tests passed`;
+    }
+    if (submitError) {
+      return `Wrong answer, ${result.passedTests} of ${result.totalTests} tests passed`;
+    }
+    return `${result.passedTests} of ${result.totalTests} tests passed`;
   };
 
   const goToNext = () => {
@@ -329,33 +343,13 @@ export default function ProblemDetail() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Large desktop (>=1440px): 3-column split */}
-      <div className="hidden xl:block h-[calc(100dvh-64px)]">
-        <div className="grid grid-cols-12 h-full">
-          {/* Problem panel */}
-          <div className="col-span-4 border-r border-[#6b7280] p-6 overflow-y-auto">
-            {ProblemPanel()}
-          </div>
-
-          {/* Editor panel */}
-          <div className="col-span-5 p-6 min-h-0">
-            {CodePanel()}
-          </div>
-
-          {/* Results panel */}
-          <div className="col-span-3 border-l border-[#6b7280] p-6 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Results</h2>
-            </div>
-            <div aria-live="polite">
-              {OutputPanel()}
-            </div>
-          </div>
-        </div>
+      {/* Visually-hidden aria-live region for screen readers */}
+      <div className="sr-only" aria-live="polite" role="status">
+        {getAnnouncement()}
       </div>
 
-      {/* Desktop/Tablet (768px-1439px): Console-below layout */}
-      <div className="hidden md:block xl:hidden h-[calc(100dvh-64px)]">
+      {/* Desktop/Tablet (>=768px): Console-below layout */}
+      <div className="hidden md:block h-[calc(100dvh-64px)]">
         <div className="grid grid-cols-12 h-full">
           {/* Problem panel */}
           <div className="col-span-5 border-r border-[#6b7280] p-6 overflow-y-auto">
@@ -370,17 +364,23 @@ export default function ProblemDetail() {
 
             {/* Collapsible console */}
             {consoleOpen && (
-              <div className="border-t border-[#6b7280] p-6" style={{ height: '35%' }}>
+              <div className="border-t border-[#6b7280] p-6" style={{ height: '35%' }} id="results-console">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-sm font-semibold uppercase tracking-wider text-[#a1a1aa] font-mono">Results</h2>
                   <button
-                    onClick={() => setConsoleOpen(false)}
-                    className="text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none"
+                    onClick={() => {
+                      setConsoleOpen(false);
+                      setUserClosedConsole(true);
+                    }}
+                    className="text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none flex items-center gap-1"
+                    aria-expanded="true"
+                    aria-controls="results-console"
                   >
+                    <ChevronUp className="h-4 w-4" />
                     Close
                   </button>
                 </div>
-                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100% - 40px)' }} aria-live="polite">
+                <div className="overflow-y-auto" style={{ maxHeight: 'calc(100% - 40px)' }}>
                   {OutputPanel()}
                 </div>
               </div>
@@ -391,9 +391,12 @@ export default function ProblemDetail() {
               <div className="border-t border-[#6b7280] p-2">
                 <button
                   onClick={() => setConsoleOpen(true)}
-                  className="w-full text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none font-mono"
+                  className="w-full text-xs text-[#a1a1aa] hover:text-[#e5e5e5] focus-visible:outline-none font-mono flex items-center justify-center gap-1"
+                  aria-expanded="false"
+                  aria-controls="results-console"
                 >
-                  ▼ Results Console
+                  <ChevronDown className="h-4 w-4" />
+                  Results Console
                 </button>
               </div>
             )}
